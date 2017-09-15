@@ -1,0 +1,7 @@
+timidity
+wildmidi
+musescore
+
+python
+        rtmidi
+        mido
