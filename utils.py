@@ -1,3 +1,6 @@
+from mido import Message, MidiFile, MidiTrack, MetaMessage
+
+import numpy as np
 import mido
 
 def copy(source, track, filter_f=lambda x: True, coef=1000):
@@ -15,7 +18,7 @@ def copy(source, track, filter_f=lambda x: True, coef=1000):
             track.append(msg.copy(time=int(msg.time*coef)))
 
 
-def getAbsT(source, filter_f=lambda x: True, unit='second'):
+def getAbsT(source, filter_f=lambda x: True, unit='second', quantize=4):
     """
         Translate a relative time-format into an
             absolute time-format.
@@ -23,6 +26,8 @@ def getAbsT(source, filter_f=lambda x: True, unit='second'):
         source: source MIDI object
         filter: filter of notes
         beat: turn time into beat unit 
+        quantize: quantize number to (1/Q)
+            (e.g. Q=4 makes (1/4*beat=) 1/16 the smallest note)
 
         check http://mido.readthedocs.io/en/latest/midi_files.html?highlight=tick2second
 
@@ -45,14 +50,96 @@ def getAbsT(source, filter_f=lambda x: True, unit='second'):
         if msg.type == 'set_tempo':
             tempo = msg.tempo 
 
+        # TODO: whether take in other delta-time 
         if filter_f(msg):
             if msg.time > 0: 
+                t = float(msg.time)
                 if unit=='second':
-                    T += msg.time 
+                    t = round(t*quantize)/quantize 
                 elif unit=='beat':
-                    T += msg.time*1000000/tempo # dont know why
+                    t = round(t*1e6/tempo*quantize)/quantize
+                else:
+                    raise NotImplemented 
+                T += t
 
             messages.append(msg)
             timestamps.append(T)
 
     return messages, timestamps
+
+
+def getHots(msgs, times, hots=128, field='note', resolution=1.):
+    """
+        Translate a (msgs, times) pair into a T*hots matrix
+
+        msgs: list of msg
+        times: timestamps
+        resolution: width of time-slice
+        field: which field to extract
+
+        usage:
+        msg, times = getAbsT(source, ...)
+        hots = getHots(msg, times)
+    """
+    
+    n = times[-1]/resolution + 1
+    res = np.zeros((int(n), hots))
+
+    # TODO: use Cython to accelerate
+    T = 0.0
+    msg_ind = 0
+    res_ind = 0
+    while T < times[-1]:
+        # sustain
+        if field == 'note':
+            res[res_ind] = res[res_ind-1]
+
+        while msg_ind < len(msgs) and T >= times[msg_ind]:
+            msg = msgs[msg_ind]
+            if field == 'note':
+                if msg.type=='note_off' or msg.velocity == 0:
+                    res[res_ind, msg.__dict__[field]] = 0.
+                else:
+                    res[res_ind, msg.__dict__[field]] = 1.
+            else:
+                raise NotImplemented 
+            msg_ind += 1
+        res_ind += 1
+        T += resolution 
+    return res
+
+
+def compose(track, notes, deltat=461.09, velocity=48, threshold=1.):
+    """
+        From notes to track
+    """
+    LEN, dim = notes.shape
+    track.append(MetaMessage('set_tempo', tempo=500000))
+
+    # notes to abs time list
+    times = []
+    actions = []
+    T = 0
+    for ind, line in enumerate(notes):
+        for note in range(dim): 
+            if notes[ind, note] >= threshold and (ind == 0 or notes[ind-1, note] < threshold):
+                times.append(T)
+                actions.append(('note_on', note))
+
+        T += int(deltat)
+
+        for note in range(dim): 
+            if (notes[ind, note] <threshold and notes[ind-1, note] >= threshold)\
+                                  or (ind==LEN-1 and notes[ind, note]>= threshold):
+                times.append(T)
+                actions.append(('note_off', note))
+
+    for i in range(len(times)-1, 0, -1):
+        times[i] = times[i] - times[i-1]
+
+    for t, a in zip(times, actions):
+        if a[0] == 'note_on':
+            track.append( Message('note_on', note=a[1], velocity=velocity, time=t)) 
+        else:
+            track.append( Message('note_off', note=a[1], velocity=0, time=t)) 
+

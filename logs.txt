@@ -1,0 +1,41 @@
+09152017
+  finish most utility tools
+
+
+09162017
+  finish the first demo
+
+  x sustain too long
+    add limitation on sustain time
+    > more diverse, have longer pattern
+
+  x dive into slience (no 1 at all)
+    randomize the input when slient
+    > no slience 
+  ===>0000.mid
+
+  > try stateful RNN
+    but not aligned with one song when training
+    > not good, all slience
+
+  > change mse to binary_crossentropy
+    much less confidence
+    > use threshold==0.3
+      > not bad, has rhythm ====> 0001.mid
+      comes to slience and start again 
+        > use note/=max strategy, not good ===> 0002.mid
+      > add noise
+        still slience but more diverse 0003.mid
+      > use binomial random (1, 0.3) rather than uniform
+        more diverse 0004.mid
+      > use binomial random (1, 0.6)
+        it got emotional sometimes LOL 0005.mid
+      > use binomial random (1, 0.8)
+        more keys, but in an aweful styel 0006.mid 
+
+    ==> conclusion
+      overfit on one tune, which is bad (or good?)
+
+09172017
+TODO: augment data by shifting 
+
