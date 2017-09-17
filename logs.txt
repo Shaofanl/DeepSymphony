@@ -66,6 +66,10 @@
 		0014.mid
 	remove the random reset to make the theme of song consistant
 		0015.mid
+	random->(1, 0.3)
+		0016.mid
+        can switch between rhythms
+		0017.mid
 
 
 TODO: augment data by shifting 

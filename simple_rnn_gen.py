@@ -2,12 +2,27 @@ from keras.models import load_model
 from keras.layers import LSTM
 import numpy as np
 from mido import Message, MidiFile, MidiTrack, MetaMessage
-from utils import compose
+from utils import compose, getAbsT, getHots
+from copy import deepcopy
+
+def get_openning(LEN, mode='borrow'):
+    if mode == 'borrow':
+        # borrow from song 
+        midi = MidiFile("songs/bach_846.mid")
+        msgs, times = getAbsT(midi, filter_f=lambda x: x.type in ['note_on', 'note_off'], unit='beat')
+        hots = getHots(msgs, times, resolution=0.25)
+        return [hots[i] for i in range(LEN)]
+    elif mode == 'random':
+        # random
+        # return [np.random.rand(dim,) for _ in range(LEN)]
+        return [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
+    else:
+        raise NotImplemented
 
 if __name__ == '__main__':
     SONG_LEN = 500
-    THRESHOLD = 0.60
-    MAX_SUSTAIN = 3
+    THRESHOLD = 0.55
+    MAX_SUSTAIN = 4
 
     mid = MidiFile()
     track = MidiTrack()
@@ -16,14 +31,8 @@ if __name__ == '__main__':
     model = load_model('temp/simple_rnn.h5')
     _, LEN, dim = model.input_shape
 
-    def get_random():
-#       return [np.random.rand(dim,) for _ in range(LEN)]
-        return [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
-
-    # using random as openning 
-#   seq = [np.random.rand(dim,) for _ in range(LEN)]
-    seq = get_random() 
-    notes = []
+    seq = get_openning(LEN, mode='random') 
+    notes = [] #deepcopy(seq)
     accumulate = np.zeros((dim,)).astype('int')
     for _ in range(SONG_LEN):
         note = model.predict(np.array([seq]))[0]
@@ -37,13 +46,12 @@ if __name__ == '__main__':
         print ''.join([('x' if char >= THRESHOLD else '_') for char in note])
         notes.append(note)
 
-
         if (note>= THRESHOLD).sum() == 0:
             # too less notes
             print 'no note, max =', note.max()
             #note = np.random.rand(dim,)
-			#seq = get_random() 
-            note /= note.max()
+			#seq = get_openning(LEN)
+            if note.max() > 0: note /= note.max()
             seq.append(note)
         else:
             # use output as input 
