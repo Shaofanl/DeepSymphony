@@ -6,7 +6,7 @@ from utils import compose
 
 if __name__ == '__main__':
     SONG_LEN = 500
-    THRESHOLD = 0.40
+    THRESHOLD = 0.45
     MAX_SUSTAIN = 3
 
     mid = MidiFile()
@@ -51,3 +51,5 @@ if __name__ == '__main__':
 
     compose(track, np.array(notes), deltat=200, threshold=THRESHOLD)
     mid.save('simple_rnn.mid')
+
+

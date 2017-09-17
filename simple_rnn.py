@@ -11,8 +11,8 @@ from keras.optimizers import RMSprop
 
 if __name__ == '__main__':
     DIR = 'datasets/easymusicnotes/'
-    LEN = 50  # length of input
-    N   = 20000 # number of training sequences 
+    LEN = 100  # length of input
+    N   = 10000 # number of training sequences 
 
     # preparing files
     print 'Reading files ...'
@@ -50,10 +50,10 @@ if __name__ == '__main__':
 #   np.savez("temp/data.npz", x=x, y=y)
 #   print '\tsaved to temp/data.npz'
 
-    train_x = x[:int(N*0.6)]
-    train_y = y[:int(N*0.6)]
-    valid_x = x[int(N*0.6):]
-    valid_y = y[int(N*0.6):]
+    train_x = x[:int(N*0.8)]
+    train_y = y[:int(N*0.8)]
+    valid_x = x[int(N*0.8):]
+    valid_y = y[int(N*0.8):]
 
 
     #Build models
@@ -61,12 +61,16 @@ if __name__ == '__main__':
 #   x = input = Input(batch_shape=(1,LEN, dim),)
     x = LSTM(64, stateful=False, return_sequences=True)(x)
     x = LSTM(64, stateful=False)(x)
-    x = Dense(200)(x)
-    x = Dense(128, activation='hard_sigmoid')(x)
+    x = Dense(200, activation='relu')(x)
+    x = Dense(200, activation='relu')(x)
+    x = Dense(128, activation='sigmoid')(x)
     model = Model(input, x)
     model.compile(loss='binary_crossentropy', optimizer=RMSprop(1e-3), metrics=[])
 
-    model.fit(train_x, train_y, epochs=5, validation_data=(valid_x, valid_y),
+
+    model.fit(train_x, train_y, epochs=10, validation_data=(valid_x, valid_y),
 #           batch_size=1)
             batch_size=32)
     model.save("temp/simple_rnn.h5")
+
+

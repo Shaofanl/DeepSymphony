@@ -37,5 +37,32 @@
       overfit on one tune, which is bad (or good?)
 
 09172017
+  retrain
+    > got another rhythm, which keeps unchanged in the song 
+       0007.mid
+  activation from hard_sigmoid to sigmoid
+    more diverse and proactive
+       0008.mid
+    some kind of magical realism
+  fix accumulate bug:
+    didn't set to zero after note off
+  set noise after notes.append
+  seq.append after noise is added
+    
+    wired repetition:
+        0009.mid
+    max_sus=4, noise=(0.5, 2.0)
+        0010.mid
+  less the binomial_p, sparser the notes
+    max_sus=4, noise=(0.5, 2.0), random=binomial(1, 0.3)
+        0011.mid
+  notes too dense, raise threshold to 0.99
+        0012.mid
+        not good
+  make the dense layers more complex
+     quite well 
+     0013.mid
+
+
 TODO: augment data by shifting 
 
