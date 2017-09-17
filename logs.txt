@@ -61,8 +61,11 @@
         not good
   make the dense layers more complex, shorten the max_sus
 	quite well 
-	0013.mid
+		0013.mid
 	set threshold to 0.50 to get cleaner version
+		0014.mid
+	remove the random reset to make the theme of song consistant
+		0015.mid
 
 
 TODO: augment data by shifting 

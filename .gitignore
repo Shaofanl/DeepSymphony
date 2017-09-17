@@ -2,3 +2,4 @@ datasets/
 songs/
 *.h5
 *.npz
+*.swp

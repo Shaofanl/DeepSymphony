@@ -6,8 +6,8 @@ from utils import compose
 
 if __name__ == '__main__':
     SONG_LEN = 500
-    THRESHOLD = 0.50
-    MAX_SUSTAIN = 4
+    THRESHOLD = 0.60
+    MAX_SUSTAIN = 3
 
     mid = MidiFile()
     track = MidiTrack()
@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     def get_random():
 #       return [np.random.rand(dim,) for _ in range(LEN)]
-        return [np.random.binomial(1, 0.5, (dim,)) for _ in range(LEN)]
+        return [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
 
     # using random as openning 
 #   seq = [np.random.rand(dim,) for _ in range(LEN)]
@@ -41,9 +41,10 @@ if __name__ == '__main__':
         if (note>= THRESHOLD).sum() == 0:
             # too less notes
             print 'no note, max =', note.max()
-            #note /= note.max()
             #note = np.random.rand(dim,)
-            seq = get_random() 
+			#seq = get_random() 
+            note /= note.max()
+            seq.append(note)
         else:
             # use output as input 
             note = note * np.random.uniform(0.5, 2.0, size=(dim, ))
