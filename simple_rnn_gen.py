@@ -6,8 +6,8 @@ from utils import compose
 
 if __name__ == '__main__':
     SONG_LEN = 500
-    THRESHOLD = 0.40
-    MAX_SUSTAIN = 3
+    THRESHOLD = 0.50
+    MAX_SUSTAIN = 4
 
     mid = MidiFile()
     track = MidiTrack()

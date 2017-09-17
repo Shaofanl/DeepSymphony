@@ -59,9 +59,10 @@
   notes too dense, raise threshold to 0.99
         0012.mid
         not good
-  make the dense layers more complex
-     quite well 
-     0013.mid
+  make the dense layers more complex, shorten the max_sus
+	quite well 
+	0013.mid
+	set threshold to 0.50 to get cleaner version
 
 
 TODO: augment data by shifting 
