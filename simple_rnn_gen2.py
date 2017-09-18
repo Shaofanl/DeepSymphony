@@ -21,7 +21,7 @@ def get_openning(LEN, mode='borrow'):
 
 if __name__ == '__main__':
     SONG_LEN = 500
-    THRESHOLD = 0.55
+    THRESHOLD = 0.50
     MAX_SUSTAIN = 4
 
     mid = MidiFile()
@@ -35,14 +35,13 @@ if __name__ == '__main__':
     notes = [] #deepcopy(seq)
     accumulate = np.zeros((dim,)).astype('int')
     for _ in range(SONG_LEN):
-        note = model.predict(np.array([seq]))[0]
+        note = model.predict(np.array([seq]))[0][-1]
         seq.pop(0)
 
         # sustain too long
         accumulate = accumulate*(note>= THRESHOLD) + (note>= THRESHOLD)
         note[accumulate>=MAX_SUSTAIN] = 0.
         accumulate[accumulate>=MAX_SUSTAIN] = 0.
-
 
         print ''.join([('x' if char >= THRESHOLD else '_') for char in note])
         notes.append(note)

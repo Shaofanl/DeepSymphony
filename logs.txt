@@ -72,5 +72,26 @@
 		0017.mid
 
 
+09172017
+   simple_rnn2
+      overfit on one tune, 0018.mid
+   simple structure
+      32-LSTM -> 128 FC    0019.mid
+
+
+TODO:change model
+    original:
+                                    T5 
+				    ^
+       model -> model -> model -> model
+         ^        ^        ^        ^  
+	 T1       T2       T3       T4
+    new one
+    	 ?        ?        T3       T4
+         ^        ^        ^        ^  
+       model -> model -> model -> model
+         ^        ^        ^        ^  
+	 T1       T2       ?        ? 
+TODO: remember
 TODO: augment data by shifting 
 

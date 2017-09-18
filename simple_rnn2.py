@@ -1,3 +1,17 @@
+# original:
+#                                 T5 
+#                                 ^
+#    model -> model -> model -> model
+#      ^        ^        ^        ^  
+#      T1       T2       T3       T4
+
+# new one
+#      T2       T3       T4       T5
+#      ^        ^        ^        ^  
+#    model -> model -> model -> model
+#      ^        ^        ^        ^  
+#      T1       T2       T3       T4
+
 from utils import getAbsT, getHots
 from mido import MidiFile
 import os
@@ -41,7 +55,7 @@ if __name__ == '__main__':
         ind = np.random.randint(len(data))
         start = np.random.randint(data[ind].shape[0]-LEN-1)
         x.append(data[ind][start: start+LEN])
-        y.append(data[ind][start+LEN])
+        y.append(data[ind][start+1:start+LEN+1])
 
     x = np.array(x) # (N, LEN, dim)
     y = np.array(y) # (N, dim)
@@ -59,10 +73,12 @@ if __name__ == '__main__':
     #Build models
     x = input = Input((LEN, dim))
 #   x = input = Input(batch_shape=(1,LEN, dim),)
-    x = LSTM(32, stateful=False, return_sequences=True)(x)
-    x = Dense(128, activation='sigmoid')(x)
+    x = LSTM(200, stateful=False, return_sequences=True)(x)
+    x = LSTM(128, stateful=False, return_sequences=True,
+                    activation='hard_sigmoid')(x)
     model = Model(input, x)
     model.compile(loss='binary_crossentropy', optimizer=RMSprop(1e-3), metrics=[])
+
 
     model.fit(train_x, train_y, epochs=10, validation_data=(valid_x, valid_y),
 #           batch_size=1)
