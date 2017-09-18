@@ -11,6 +11,7 @@ from keras.optimizers import RMSprop
 
 if __name__ == '__main__':
     DIR = 'datasets/easymusicnotes/'
+    # DIR = 'datasets/TPD/jazz/'
     LEN = 100  # length of input
     N   = 10000 # number of training sequences 
 
@@ -59,7 +60,9 @@ if __name__ == '__main__':
     #Build models
     x = input = Input((LEN, dim))
 #   x = input = Input(batch_shape=(1,LEN, dim),)
-    x = LSTM(32, stateful=False, return_sequences=True)(x)
+    x = LSTM(50, stateful=False, return_sequences=True)(x)
+    x = LSTM(50, stateful=False, )(x)
+    x = Dense(500, activation='relu')(x)
     x = Dense(128, activation='sigmoid')(x)
     model = Model(input, x)
     model.compile(loss='binary_crossentropy', optimizer=RMSprop(1e-3), metrics=[])

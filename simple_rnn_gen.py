@@ -8,14 +8,15 @@ from copy import deepcopy
 def get_openning(LEN, mode='borrow'):
     if mode == 'borrow':
         # borrow from song 
-        midi = MidiFile("songs/bach_846.mid")
+        # midi = MidiFile("songs/bach_846.mid")
+        midi = MidiFile("datasets/easymusicnotes/level6/anniversary-song-glen-miller-waltz-piano-level-6.mid")
         msgs, times = getAbsT(midi, filter_f=lambda x: x.type in ['note_on', 'note_off'], unit='beat')
         hots = getHots(msgs, times, resolution=0.25)
         return [hots[i] for i in range(LEN)]
     elif mode == 'random':
         # random
         # return [np.random.rand(dim,) for _ in range(LEN)]
-        return [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
+        return [np.random.binomial(1, 0.1, (dim,)) for _ in range(LEN)]
     else:
         raise NotImplemented
 
@@ -56,7 +57,7 @@ if __name__ == '__main__':
             seq.append(note)
         else:
             # use output as input 
-            note = note * np.random.uniform(0.5, 2.0, size=(dim, ))
+            note = note * np.random.uniform(0.75, 1.5, size=(dim, ))
             seq.append(note)
 
     compose(track, np.array(notes), deltat=200, threshold=THRESHOLD)

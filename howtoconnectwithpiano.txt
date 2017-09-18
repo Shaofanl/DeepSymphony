@@ -1,0 +1,4 @@
+1. plugin (create an input port by default)
+2. type `timidity -iA` to open an output/pickup port (say 129:0~3)
+3. use `aconnect -l` to check the port numbers (default 20)
+4. connect them with `aconnect 20:0 129:0`
