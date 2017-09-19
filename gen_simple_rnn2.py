@@ -60,3 +60,6 @@ if __name__ == '__main__':
 
     compose(track, np.array(notes), deltat=200, threshold=THRESHOLD)
     mid.save('simple_rnn.mid')
+
+
+

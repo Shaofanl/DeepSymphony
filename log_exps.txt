@@ -78,6 +78,11 @@
    simple structure
       32-LSTM -> 128 FC    0019.mid
 
+09182017
+   memorize
+     hard to memorize the song
+     stack on a rhythm     0020.mid
+
 
 TODO:change model
     original:
@@ -92,6 +97,8 @@ TODO:change model
        model -> model -> model -> model
          ^        ^        ^        ^  
 	 T1       T2       ?        ? 
+
 TODO: remember
 TODO: augment data by shifting 
+TODO: left-hand right-hand
 
