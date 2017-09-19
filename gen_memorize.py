@@ -37,7 +37,7 @@ if __name__ == '__main__':
         notes.append(note)
 
         # use output as input 
-#       note = note * np.random.uniform(0.75, 1.5, size=(dim, ))
+        note = note * np.random.uniform(0.75, 1.2, size=(dim, ))
         seq.append(note)
 
     compose(track, np.array(notes), deltat=100, threshold=THRESHOLD)

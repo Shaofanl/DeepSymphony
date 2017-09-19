@@ -86,7 +86,11 @@
 
    change to
      LSTM-100, Dense-50, Dense-128
-     change remember longer rhythm, but still repeating
+     change remember longer rhythm, but still repeating 0021.mid
+   
+   add random decay in the generation
+     random connection of pieces 0022.mid
+
 
 
 TODO:change model
