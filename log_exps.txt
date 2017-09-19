@@ -82,6 +82,11 @@
    memorize
      hard to memorize the song
      stack on a rhythm     0020.mid
+     keep repeating a most-frequent rhythms
+
+   change to
+     LSTM-100, Dense-50, Dense-128
+     change remember longer rhythm, but still repeating
 
 
 TODO:change model

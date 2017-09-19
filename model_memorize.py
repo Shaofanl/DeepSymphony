@@ -32,8 +32,8 @@ if __name__ == '__main__':
 
     #Build models
     x = input = Input(batch_shape=(1, LEN, dim))
-    x = LSTM(100, stateful=True, return_sequences=True)(x)
     x = LSTM(100, stateful=True, )(x)
+    x = Dense(50, activation='relu')(x)
     x = Dense(128, activation='sigmoid')(x)
     model = Model(input, x)
     model.compile(loss='binary_crossentropy', optimizer=RMSprop(1e-3), metrics=[])

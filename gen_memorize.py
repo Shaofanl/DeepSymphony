@@ -2,13 +2,14 @@ from utils import getAbsT, getHots, compose
 from mido import MidiFile, MidiTrack
 import os
 import numpy as np
+from copy import deepcopy
 
 from keras.models import load_model
 
 
 if __name__ == '__main__':
     FILE = 'datasets/easymusicnotes/level6/anniversary-song-glen-miller-waltz-piano-level-6.mid'
-    SONG_LEN = 400
+    SONG_LEN = 1000
     LEN = 20
     dim = 128
     THRESHOLD = 0.85
@@ -25,7 +26,8 @@ if __name__ == '__main__':
     mid.tracks.append(track)
 
     seq = [hots[i] for i in range(20)]
-    notes = [hots[i] for i in range(20)]
+#   seq = [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
+    notes = deepcopy(seq) 
     accumulate = np.zeros((dim,)).astype('int')
     for _ in range(SONG_LEN):
         note = model.predict(np.array([seq]))[0]
