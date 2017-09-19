@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     seq = [hots[i] for i in range(20)]
 #   seq = [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
-    notes = deepcopy(seq) 
+    notes = [] #deepcopy(seq) 
     accumulate = np.zeros((dim,)).astype('int')
     for _ in range(SONG_LEN):
         note = model.predict(np.array([seq]))[0]
@@ -37,7 +37,7 @@ if __name__ == '__main__':
         notes.append(note)
 
         # use output as input 
-        note = note * np.random.uniform(0.75, 1.2, size=(dim, ))
+        # note = note * np.random.uniform(0.75, 1.2, size=(dim, ))
         seq.append(note)
 
     compose(track, np.array(notes), deltat=100, threshold=THRESHOLD)
