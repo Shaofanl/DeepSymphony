@@ -2,16 +2,15 @@ from keras.models import load_model
 from keras.layers import LSTM
 import numpy as np
 from mido import Message, MidiFile, MidiTrack, MetaMessage
-from utils import compose, getAbsT, getHots
 from copy import deepcopy
+from midiwrapper import Song
 
 def get_openning(LEN, mode='borrow'):
     if mode == 'borrow':
         # borrow from song 
         # midi = MidiFile("songs/bach_846.mid")
-        midi = MidiFile("datasets/easymusicnotes/level6/anniversary-song-glen-miller-waltz-piano-level-6.mid")
-        msgs, times = getAbsT(midi, filter_f=lambda x: x.type in ['note_on', 'note_off'], unit='beat')
-        hots = getHots(msgs, times, resolution=0.25)
+        midi = Song("datasets/easymusicnotes/level6/anniversary-song-glen-miller-waltz-piano-level-6.mid")
+        hots = midi.encode_onehot()
         return [hots[i] for i in range(LEN)]
     elif mode == 'random':
         # random
@@ -25,14 +24,13 @@ if __name__ == '__main__':
     THRESHOLD = 0.55
     MAX_SUSTAIN = 4
 
-    mid = MidiFile()
-    track = MidiTrack()
-    mid.tracks.append(track)
+    mid = Song()
+    track = mid.add_track()
 
     model = load_model('temp/simple_rnn.h5')
     _, LEN, dim = model.input_shape
 
-    seq = get_openning(LEN, mode='borrow') 
+    seq = get_openning(LEN, mode='random') 
     notes = [] #deepcopy(seq)
     accumulate = np.zeros((dim,)).astype('int')
     for _ in range(SONG_LEN):
@@ -60,5 +58,5 @@ if __name__ == '__main__':
             note = note * np.random.uniform(0.75, 1.5, size=(dim, ))
             seq.append(note)
 
-    compose(track, np.array(notes), deltat=200, threshold=THRESHOLD)
-    mid.save('simple_rnn.mid')
+    mid.compose(track, np.array(notes), deltat=200, threshold=THRESHOLD)
+    mid.save_as('simple_rnn.mid')

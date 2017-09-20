@@ -1,32 +1,31 @@
 import mido
 from mido import Message, MidiFile, MidiTrack, MetaMessage
-from utils import getAbsT, getHots, copy
+from midiwrapper import Song
 from itertools import izip
 from time import sleep
 import sys
 
 def demo_copy(argv):
-    mid = MidiFile()
-    track = MidiTrack()
-    mid.tracks.append(track)
+    mid = Song()
+    track = mid.add_track()
 
     source = MidiFile('playground/AutumnL.mid')
     # only copy notes
-    copy(source, track, filter_f=lambda x: x.type == 'note_on')
+    Song._copy(source, track, filter_f=lambda x: x.type == 'note_on')
     mid.save('playground/AutumnL_copy.mid')
 
 def demo_align(argv):
     source = MidiFile('songs/bach_846.mid')
     #source = MidiFile('songs/AutumnL.mid')
     #source = MidiFile('datasets/easymusicnotes/level6/anniversary-song-glen-miller-waltz-piano-level-6.mid')
-    msgs, times = getAbsT(source, 
+    msgs, times = Song._get_absolute_time(source, 
                         filter_f=lambda x: x.type in ['note_on', 'note_off'], 
                         unit='beat')
 
     for msg, t in zip(msgs,times):
         print t, msg
 
-    hots = getHots(msgs, times, resolution=0.25)
+    hots = Song._get_hots(msgs, times, resolution=0.25)
     print hots.shape
 
     for hoti in hots:
@@ -43,9 +42,8 @@ def demo_playback(argv):
         print msg
 
 def demo_random_new(argv):
-    mid = MidiFile()
-    track = MidiTrack()
-    mid.tracks.append(track)
+    mid = Song()
+    track = mid.add_track()
 
     header = MidiFile('AutumnL.mid')
 
@@ -86,4 +84,5 @@ if __name__ == '__main__':
             raise NotImplementedError("Demo `{}` not exist.".format(argv[1]))
         else:
             f = demos[names.index(argv[1])](argv[2:])
+
 

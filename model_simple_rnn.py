@@ -1,5 +1,4 @@
-from utils import getAbsT, getHots
-from mido import MidiFile
+from midiwrapper import Song
 import os
 import numpy as np
 
@@ -21,14 +20,13 @@ if __name__ == '__main__':
     for root, _, files in os.walk(DIR):
         for name in files: 
             filelist.append(os.path.join(root, name))
-    midis = [MidiFile(filename) for filename in filelist]
+    midis = [Song(filename) for filename in filelist]
     data = []
     for ind, midi in enumerate(midis):
         print '\t[{:02d}/{:02d}] Handling'.format(ind, len(midis)), filelist[ind], '...'
-        msgs, times = getAbsT(midi, 
-					filter_f=lambda x: x.type in ['note_on', 'note_off'], 
-					unit='beat')
-        hots = getHots(msgs, times, resolution=0.25)
+        hots = midi.encode_onehot(
+                    {'filter_f':lambda x: x.type in ['note_on', 'note_off'], 'unit':'beat'}, 
+                    {'resolution':0.25})
         data.append(hots)
         print '\t', hots.shape
     data = np.array(data)
@@ -71,5 +69,4 @@ if __name__ == '__main__':
 #           batch_size=1)
             batch_size=32)
     model.save("temp/simple_rnn.h5")
-
 
