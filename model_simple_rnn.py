@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 import keras
-from keras.layers import Input, LSTM, Dense, Activation
+from keras.layers import Input, LSTM, Dense, Activation, Dropout
 from keras.models import Model
 from keras.optimizers import RMSprop
 
@@ -12,7 +12,7 @@ from keras.optimizers import RMSprop
 if __name__ == '__main__':
     DIR = 'datasets/easymusicnotes/'
     # DIR = 'datasets/TPD/jazz/'
-    LEN = 100  # length of input
+    LEN = 20 # length of input
     N   = 10000 # number of training sequences 
 
     # preparing files
@@ -60,14 +60,17 @@ if __name__ == '__main__':
     #Build models
     x = input = Input((LEN, dim))
 #   x = input = Input(batch_shape=(1,LEN, dim),)
-    x = LSTM(50, stateful=False, return_sequences=True)(x)
-    x = LSTM(50, stateful=False, )(x)
+    x = LSTM(512, stateful=False, return_sequences=True)(x)
+    x = LSTM(512, stateful=False, return_sequences=True)(x)
+    x = LSTM(512, stateful=False)(x)
+    x = Dropout(0.5)(x)
     x = Dense(500, activation='relu')(x)
+    x = Dropout(0.5)(x)
     x = Dense(128, activation='sigmoid')(x)
     model = Model(input, x)
     model.compile(loss='binary_crossentropy', optimizer=RMSprop(1e-3), metrics=[])
 
-    model.fit(train_x, train_y, epochs=10, validation_data=(valid_x, valid_y),
+    model.fit(train_x, train_y, epochs=200, validation_data=(valid_x, valid_y),
 #           batch_size=1)
             batch_size=32)
     model.save("temp/simple_rnn.h5")

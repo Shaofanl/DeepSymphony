@@ -16,13 +16,13 @@ def get_openning(LEN, mode='borrow'):
     elif mode == 'random':
         # random
         # return [np.random.rand(dim,) for _ in range(LEN)]
-        return [np.random.binomial(1, 0.1, (dim,)) for _ in range(LEN)]
+        return [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
     else:
         raise NotImplemented
 
 if __name__ == '__main__':
     SONG_LEN = 500
-    THRESHOLD = 0.55
+    THRESHOLD = 0.60
     MAX_SUSTAIN = 4
 
     mid = MidiFile()
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     model = load_model('temp/simple_rnn.h5')
     _, LEN, dim = model.input_shape
 
-    seq = get_openning(LEN, mode='borrow') 
+    seq = get_openning(LEN, mode='random') 
     notes = [] #deepcopy(seq)
     accumulate = np.zeros((dim,)).astype('int')
     for _ in range(SONG_LEN):
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             seq.append(note)
         else:
             # use output as input 
-            note = note * np.random.uniform(0.75, 1.5, size=(dim, ))
+            # note = note * np.random.uniform(0.75, 1.5, size=(dim, ))
             seq.append(note)
 
     compose(track, np.array(notes), deltat=200, threshold=THRESHOLD)
