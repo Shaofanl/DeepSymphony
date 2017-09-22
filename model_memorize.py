@@ -1,5 +1,5 @@
-from utils import getAbsT, getHots
 from mido import MidiFile
+from midiwrapper import Song
 import os
 import numpy as np
 
@@ -8,15 +8,15 @@ from keras.layers import Input, LSTM, Dense, Activation
 from keras.models import Model
 from keras.optimizers import RMSprop, Adam
 
-
 if __name__ == '__main__':
     FILE = 'datasets/easymusicnotes/level6/anniversary-song-glen-miller-waltz-piano-level-6.mid'
     LEN = 20
     dim = 128
 
-    midi = MidiFile(FILE)
-    msgs, times = getAbsT(midi, filter_f=lambda x: x.type in ['note_on', 'note_off'], unit='beat')
-    hots = getHots(msgs, times, resolution=0.25)
+    hots = Song(FILE).\
+            encode_onehot(
+                    {'filter_f':lambda x: x.type in ['note_on', 'note_off'], 'unit':'beat'}, 
+                    {'resolution':0.25})
     print hots.shape
 
     x = []
@@ -39,5 +39,4 @@ if __name__ == '__main__':
 
     model.fit(train_x, train_y, epochs=40, batch_size=1)
     model.save("temp/memorize.h5")
-
 

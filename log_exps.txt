@@ -111,3 +111,6 @@ TODO: remember
 TODO: augment data by shifting 
 TODO: left-hand right-hand
 
+
+GAN
+AE
