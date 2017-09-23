@@ -1,8 +1,5 @@
-from mido import MidiFile, MidiTrack
 from midiwrapper import Song
-import os
 import numpy as np
-from copy import deepcopy
 
 from keras.models import load_model
 
@@ -12,22 +9,22 @@ if __name__ == '__main__':
     SONG_LEN = 1000
     LEN = 20
     dim = 128
-    THRESHOLD = 0.85 
+    THRESHOLD = 0.85
 
     hots = Song(FILE).\
-            encode_onehot(
-                    {'filter_f':lambda x: x.type in ['note_on', 'note_off'], 'unit':'beat'}, 
-                    {'resolution':0.25})
+        encode_onehot(
+                    {'filter_f': lambda x: x.type in ['note_on', 'note_off'],
+                     'unit': 'beat'},
+                    {'resolution': 0.25})
     print hots.shape
     model = load_model('temp/memorize.h5')
-
 
     mid = Song()
     track = mid.add_track()
 
     seq = [hots[i] for i in range(20)]
 #   seq = [np.random.binomial(1, 0.3, (dim,)) for _ in range(LEN)]
-    notes = [] #deepcopy(seq) 
+    notes = []  # deepcopy(seq)
     accumulate = np.zeros((dim,)).astype('int')
     for _ in range(SONG_LEN):
         note = model.predict(np.array([seq]))[0]
@@ -36,10 +33,9 @@ if __name__ == '__main__':
         print ''.join([('x' if char >= THRESHOLD else '_') for char in note])
         notes.append(note)
 
-        # use output as input 
+        # use output as input
         # note = note * np.random.uniform(0.75, 1.2, size=(dim, ))
         seq.append(note)
 
     mid._compose(track, np.array(notes), deltat=100, threshold=THRESHOLD)
     mid.save_as('memorize.mid')
-

@@ -19,15 +19,14 @@ class Song(object):
     #====================================
     #       Encoding functions
     #====================================
-    def encode_onehot(self, 
-            kwargs1={'filter_f':lambda x: x.type in ['note_on', 'note_off'], 'unit':'beat'}, 
+    def encode_onehot(self,
+            kwargs1={'filter_f':lambda x: x.type in ['note_on', 'note_off'], 'unit':'beat'},
             kwargs2={'resolution':0.25}):
         msgs, times = self._get_absolute_time(self.midi, **kwargs1)
         hots = self._get_hots(msgs, times, **kwargs2)
         return hots
 
 
-    
     #====================================
     #       Utility functions 
     #====================================
