@@ -98,6 +98,12 @@
       d_loss converged to almost 0
       g_loss dispesed to 16 and the output remained unchange
 
+  gan rnn2 (commit "gan conv")
+    can learn which note is more frequently played than other, 
+      but don't have inner patter (maybe the dataset is too small?)
+      display/9900.png vs display/real.png
+
+
 
 
 TODO:change model

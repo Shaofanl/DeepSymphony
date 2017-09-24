@@ -5,6 +5,7 @@ from keras.layers import Conv2D, Dense, Activation, \
 from keras.models import Model, Sequential
 from keras.datasets import mnist
 from keras.optimizers import Adam
+from keras.initializers import RandomNormal
 import numpy as np
 
 import os
@@ -16,19 +17,21 @@ def basic_gen(coding_shape,
               nf=128,
               scale=4,
               FC=[],
-              use_upsample=False):
+              use_upsample=False,
+              init='glorot_uniform',):
     h, w, dim = img_shape
 
     img = Input(coding_shape)
     x = img
     for fc_dim in FC:
-        x = Dense(fc_dim)(x)
+        x = Dense(fc_dim, kernel_initializer=init)(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = LeakyReLU(0.2)(x)
 
-    x = Dense(nf*2**(scale-1)*(h/2**scale)*(w/2**scale))(x)
+    x = Dense(nf*2**(scale-1)*(h/2**scale)*(w/2**scale),
+              kernel_initializer=init)(x)
     x = BatchNormalization()(x)
-    x = Activation('relu')(x)
+    x = LeakyReLU(0.2)(x)
     x = Reshape((h/2**scale, w/2**scale, nf*2**(scale-1)))(x)
 
     for s in range(scale-2, -1, -1):
@@ -36,29 +39,34 @@ def basic_gen(coding_shape,
         # http://distill.pub/2016/deconv-checkerboard/
         if use_upsample:
             x = UpSampling2D()(x)
-            x = Conv2D(nf*2**s, (3, 3), padding='same')(x)
+            x = Conv2D(nf*2**s, (3, 3), padding='same',
+                       kernel_initializer=init)(x)
         else:
             x = Conv2DTranspose(nf*2**s,
                                 (3, 3),
                                 strides=(2, 2),
+                                kernel_initializer=init,
                                 padding='same')(x)
         x = BatchNormalization()(x)
-        x = Activation('relu')(x)
+        x = LeakyReLU(0.2)(x)
 
     if use_upsample:
         x = UpSampling2D()(x)
-        x = Conv2D(dim, (3, 3), padding='same')(x)
+        x = Conv2D(dim, (3, 3), padding='same',
+                   kernel_initializer=init,)(x)
     else:
         x = Conv2DTranspose(dim, (3, 3),
                             strides=(2, 2),
-                            padding='same')(x)
+                            padding='same',
+                            kernel_initializer=init,)(x)
 
     x = Activation('tanh')(x)
 
     return Model(img, x)
 
 
-def basic_dis(input_shape, nf=128, scale=4, FC=[], bn=True):
+def basic_dis(input_shape, nf=128, scale=4, FC=[], bn=True,
+              init='glorot_uniform',):
     h, w, dim = input_shape
 
     img = Input(input_shape)
@@ -67,14 +75,15 @@ def basic_dis(input_shape, nf=128, scale=4, FC=[], bn=True):
     for s in range(scale):
         x = Conv2D(nf*2**s, (5, 5),
                    strides=(2, 2),
-                   padding='same')(x)
+                   padding='same',
+                   kernel_initializer=init,)(x)
         if bn:
             x = BatchNormalization()(x)
         x = LeakyReLU(0.2)(x)
 
     x = Flatten()(x)
     for fc in FC:
-        x = Dense(fc)(x)
+        x = Dense(fc, kernel_initializer=init,)(x)
         if bn:
             x = BatchNormalization()(x)
         x = LeakyReLU(0.2)(x)
@@ -103,13 +112,15 @@ if __name__ == '__main__':
                     img_shape=x_train[0].shape,
                     nf=32,
                     scale=2,
-                    FC=[64],)
+                    FC=[64],
+                    init=RandomNormal(stddev=1e-2),)
     gen.summary()
 
     dis = basic_dis(input_shape=x_train[0].shape,
                     nf=32,
                     scale=2,
-                    FC=[64],)
+                    FC=[64],
+                    init=RandomNormal(stddev=1e-2),)
     dis.summary()
 
     opt = Adam(1e-3, beta_1=0.5, beta_2=0.9)
