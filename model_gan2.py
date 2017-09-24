@@ -12,7 +12,7 @@ from keras.layers import Conv2D, Dense, Activation, \
     UpSampling2D, Conv2DTranspose, LeakyReLU, \
     Flatten, LSTM, Dropout
 from keras.models import Model, Sequential
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from gan import basic_dis, basic_gen
 
 import argparse
@@ -66,7 +66,8 @@ if __name__ == '__main__':
         return x
 
     def code_generator(bs):
-        Z = np.random.uniform(-1., 1., size=(bs, code_dim))
+        # Z = np.random.uniform(-1., 1., size=(bs, code_dim))
+        Z = np.random.normal(0, 1., size=(bs, code_dim))
         return Z
 
     # component definition
@@ -80,22 +81,24 @@ if __name__ == '__main__':
 
     dis = basic_dis(input_shape=(seq_len, note_dim, 1),
                     nf=32,
-                    scale=3,
+                    scale=2,
                     FC=[])
     dis.summary()
 
     # model definition
-    opt = Adam(5e-4, beta_1=0.5, beta_2=0.9)
+    gen_opt = Adam(5e-4, beta_1=0.5, beta_2=0.9)
+    dis_opt = SGD(5e-4, momentum=0.9)
+
     gendis = Sequential([gen, dis])
     dis.trainable = False
-    gendis.compile(optimizer=opt, loss='binary_crossentropy')
+    gendis.compile(optimizer=gen_opt, loss='binary_crossentropy')
 
     shape = dis.get_input_shape_at(0)[1:]
     gen_input, real_input = Input(shape), Input(shape)
     dis2batch = Model([gen_input, real_input],
                       [dis(gen_input), dis(real_input)])
     dis.trainable = True
-    dis2batch.compile(optimizer=opt,
+    dis2batch.compile(optimizer=dis_opt,
                       loss='binary_crossentropy',
                       metrics=['binary_accuracy'])
 
@@ -105,10 +108,16 @@ if __name__ == '__main__':
     imsave('{}/real.png'.format(vis_dir),
            Song.grid_vis_songs(data_generator(25)[:, :, :, 0]))
     vis_Z = code_generator(25)
+    fake_pool = gen.predict(vis_Z)
     for iteration in range(0, niter):
         print 'iteration', iteration
         Z = code_generator(nbatch)
         gen_img = gen.predict(Z)
+
+        fake_pool = np.vstack([fake_pool[:nbatch], gen_img])
+        shuffle_indices = np.random.permutation(len(fake_pool))
+        fake_pool = fake_pool[shuffle_indices]
+        gen_img = fake_pool[:nbatch]
 
         real_img = data_generator(nbatch)
         gen_y = np.zeros((nbatch, 1))
