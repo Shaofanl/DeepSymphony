@@ -11,7 +11,7 @@ import os
 from scipy.misc import imsave
 
 
-def basic_gen(input_shape,
+def basic_gen(coding_shape,
               img_shape,
               nf=128,
               scale=4,
@@ -19,7 +19,7 @@ def basic_gen(input_shape,
               use_upsample=False):
     h, w, dim = img_shape
 
-    img = Input(input_shape)
+    img = Input(coding_shape)
     x = img
     for fc_dim in FC:
         x = Dense(fc_dim)(x)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         indices = np.random.randint(x_train.shape[0], size=(bs,))
         return x_train[indices]
 
-    gen = basic_gen(input_shape=(coding,),
+    gen = basic_gen(coding_shape=(coding,),
                     img_shape=x_train[0].shape,
                     nf=32,
                     scale=2,

@@ -91,6 +91,13 @@
    add random decay in the generation
      random connection of pieces 0022.mid
 
+09182017
+  gan rnn1 (commit "gan rnn")
+    cannot even learn the patter that most places are black
+    stop converging after 500 
+      d_loss converged to almost 0
+      g_loss dispesed to 16 and the output remained unchange
+
 
 
 TODO:change model

@@ -17,7 +17,10 @@ def demo_copy(argv):
 
 
 def demo_align(argv):
-    source = MidiFile('songs/bach_846.mid')
+    if len(argv) == 0:
+        source = MidiFile('songs/bach_846.mid')
+    else:
+        source = MidiFile(argv[0])
     # source = MidiFile('songs/AutumnL.mid')
     # source = MidiFile('datasets/easymusicnotes/level6/anniversary-song-glen-miller-waltz-piano-level-6.mid')
     msgs, times = Song._get_absolute_time(

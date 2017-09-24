@@ -1,0 +1,11 @@
+- observation
+> surmise 
+
+Using RNN as discriminator
+  - Cannot even learn the pattern that most part should be black (slience)
+  > The backward gradient/direction is fused in the whole sequence, we 
+  should localize those guidance
+     1: 1D conv
+     2: feed back on embedding rather than notes
+     3: low resolution to high resolution
+          (like image generation: (7, 7)->(14, 14)->(32, 32))

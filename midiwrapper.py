@@ -1,6 +1,6 @@
 from mido import MidiFile, Message, MidiTrack, MetaMessage
 import numpy as np
-import mido
+import os
 
 
 class Song(object):
@@ -15,33 +15,67 @@ class Song(object):
     def save_as(self, filename):
         self.midi.save(filename)
 
-
-    #====================================
+    # ====================================
     #       Encoding functions
-    #====================================
-    def encode_onehot(self,
-            kwargs1={'filter_f':lambda x: x.type in ['note_on', 'note_off'], 'unit':'beat'},
-            kwargs2={'resolution':0.25}):
+    # ====================================
+    def encode_onehot(
+            self,
+            kwargs1={'filter_f': lambda x: x.type in ['note_on', 'note_off'],
+                     'unit': 'beat'},
+            kwargs2={'resolution': 0.25}):
         msgs, times = self._get_absolute_time(self.midi, **kwargs1)
         hots = self._get_hots(msgs, times, **kwargs2)
         return hots
 
+    # ====================================
+    #       Visualization functions
+    # ====================================
+    @staticmethod
+    def grid_vis_songs(songs, gh=5, gw=5, margin=3):
+        _, w, h = songs.shape
+        vis = np.ones((gh*(h+margin), gw*(w+margin)))
+        for i in range(gh):
+            for j in range(gw):
+                vis[i*(h+margin):i*(h+margin)+h,
+                    j*(w+margin):j*(w+margin)+w] = songs[i*gw+j].T
+        return vis
 
-    #====================================
-    #       Utility functions 
-    #====================================
+    # ====================================
+    #       Utility functions
+    # ====================================
+    @staticmethod
+    def load_from_dir(dirpath, encode='onehot', **kwargs):
+        filelist = []
+        for root, _, files in os.walk(dirpath):
+            for name in files:
+                filelist.append(os.path.join(root, name))
+        midis = [Song(filename) for filename in filelist]
+        data = []
+        for ind, midi in enumerate(midis):
+            print '\t[{:02d}/{:02d}] Handling'.format(ind, len(midis)),\
+                filelist[ind], '...'
+            hots = getattr(midi, 'encode_'+encode)(**kwargs)
+            data.append(hots)
+            print '\t', hots.shape
+        data = np.array(data)
+        return data
+
     def get_absolute_time(self, **kwargs):
         return self._get_absolute_time(self.midi, **kwargs)
 
     @staticmethod
-    def _get_absolute_time(source, filter_f=lambda x: True, unit='second', quantize=4):
+    def _get_absolute_time(
+            source,
+            filter_f=lambda x: True,
+            unit='second',
+            quantize=4):
         """
             Translate a relative time-format into an
                 absolute time-format.
 
             source: source MIDI object
             filter: filter of notes
-            beat: turn time into beat unit 
+            beat: turn time into beat unit
             quantize: quantize number to (1/Q)
                 (e.g. Q=4 makes (1/4*beat=) 1/16 the smallest note)
 
@@ -49,32 +83,32 @@ class Song(object):
 
             Minutes |                               |
             --------|-------------------------------| beats per minute (BPM=4)
-            Beats   | x   x   x   x | x   x   x   x | 
+            Beats   | x   x   x   x | x   x   x   x |
             --------|-------------------------------| ticks per beat (TPB=3)
             Ticks   |^^^|^^^|^^^|^^^|^^^|^^^|^^^|^^^| or pulses per quarter note (PPQ=3)
 
             60000 / (BPM * PPQ)
             (i.e. a 120 BPM track would have a MIDI time of (60000 / (120 * 192)) or 2.604 ms for 1 tick.
         """
-        tempo = 500000 # 120BPM
+        tempo = 500000  # 120BPM
 
         timestamps = []
         T = 0.0
         messages = []
         for msg in source:
             if msg.type == 'set_tempo':
-                tempo = msg.tempo 
+                tempo = msg.tempo
 
-            # TODO: whether take in other delta-time 
+            # TODO: whether take in other delta-time
             if filter_f(msg):
-                if msg.time > 0: 
+                if msg.time > 0:
                     t = float(msg.time)
-                    if unit=='second':
-                        t = round(t*quantize)/quantize 
-                    elif unit=='beat':
+                    if unit == 'second':
+                        t = round(t*quantize)/quantize
+                    elif unit == 'beat':
                         t = round(t*1e6/tempo*quantize)/quantize
                     else:
-                        raise NotImplemented 
+                        raise NotImplemented
                     T += t
 
                 messages.append(msg)
@@ -96,7 +130,6 @@ class Song(object):
             msg, times = getAbsT(source, ...)
             hots = getHots(msg, times)
         """
-        
         n = times[-1]/resolution + 1
         res = np.zeros((int(n), hots))
 
@@ -112,15 +145,15 @@ class Song(object):
             while msg_ind < len(msgs) and T >= times[msg_ind]:
                 msg = msgs[msg_ind]
                 if field == 'note':
-                    if msg.type=='note_off' or msg.velocity == 0:
+                    if msg.type == 'note_off' or msg.velocity == 0:
                         res[res_ind, msg.__dict__[field]] = 0.
                     else:
                         res[res_ind, msg.__dict__[field]] = 1.
                 else:
-                    raise NotImplemented 
+                    raise NotImplemented
                 msg_ind += 1
             res_ind += 1
-            T += resolution 
+            T += resolution
         return res
 
     @staticmethod
@@ -151,16 +184,18 @@ class Song(object):
         actions = []
         T = 0
         for ind, line in enumerate(notes):
-            for note in range(dim): 
-                if notes[ind, note] >= threshold and (ind == 0 or notes[ind-1, note] < threshold):
+            for note in range(dim):
+                if notes[ind, note] >= threshold and \
+                        (ind == 0 or notes[ind-1, note] < threshold):
                     times.append(T)
                     actions.append(('note_on', note))
 
             T += int(deltat)
 
-            for note in range(dim): 
-                if (notes[ind, note] <threshold and notes[ind-1, note] >= threshold)\
-                                      or (ind==LEN-1 and notes[ind, note]>= threshold):
+            for note in range(dim):
+                if (notes[ind, note] < threshold and
+                        notes[ind-1, note] >= threshold) or \
+                        (ind == LEN-1 and notes[ind, note] >= threshold):
                     times.append(T)
                     actions.append(('note_off', note))
 
@@ -169,7 +204,12 @@ class Song(object):
 
         for t, a in zip(times, actions):
             if a[0] == 'note_on':
-                track.append( Message('note_on', note=a[1], velocity=velocity, time=t)) 
+                track.append(Message('note_on',
+                                     note=a[1],
+                                     velocity=velocity,
+                                     time=t))
             else:
-                track.append( Message('note_off', note=a[1], velocity=0, time=t)) 
-
+                track.append(Message('note_off',
+                                     note=a[1],
+                                     velocity=0,
+                                     time=t))
