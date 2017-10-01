@@ -1,7 +1,8 @@
 from keras.layers import Conv2D, Dense, Activation, \
     Input, BatchNormalization, Reshape, \
     UpSampling2D, Conv2DTranspose, LeakyReLU, \
-    Flatten
+    Flatten, Lambda
+import keras.backend as K
 from keras.models import Model, Sequential
 from keras.datasets import mnist
 from keras.optimizers import Adam
@@ -12,13 +13,13 @@ import os
 from scipy.misc import imsave
 
 
-def basic_gen(coding_shape,
-              img_shape,
-              nf=128,
-              scale=4,
-              FC=[],
-              use_upsample=False,
-              init='glorot_uniform',):
+def cnn_gen(coding_shape,
+            img_shape,
+            nf=128,
+            scale=4,
+            FC=[],
+            use_upsample=False,
+            init='glorot_uniform',):
     h, w, dim = img_shape
 
     img = Input(coding_shape)
@@ -65,12 +66,20 @@ def basic_gen(coding_shape,
     return Model(img, x)
 
 
-def basic_dis(input_shape, nf=128, scale=4, FC=[], bn=True,
-              init='glorot_uniform',):
-    h, w, dim = input_shape
-
-    img = Input(input_shape)
-    x = img
+def cnn_dis(input_shape, nf=128, scale=4, FC=[], bn=True,
+            init='glorot_uniform',):
+    if len(input_shape) == 2:
+        h, w = input_shape
+        dim = 1
+        img = Input(input_shape)
+        x = Lambda(lambda x: K.expand_dims(x, -1),
+                   lambda x: x+(1,))(img)
+    elif len(input_shape) == 3:
+        h, w, dim = input_shape
+        img = Input(input_shape)
+        x = img
+    else:
+        raise Exception
 
     for s in range(scale):
         x = Conv2D(nf*2**s, (5, 5),
@@ -108,19 +117,19 @@ if __name__ == '__main__':
         indices = np.random.randint(x_train.shape[0], size=(bs,))
         return x_train[indices]
 
-    gen = basic_gen(coding_shape=(coding,),
-                    img_shape=x_train[0].shape,
-                    nf=32,
-                    scale=2,
-                    FC=[64],
-                    init=RandomNormal(stddev=1e-2),)
+    gen = cnn_gen(coding_shape=(coding,),
+                  img_shape=x_train[0].shape,
+                  nf=32,
+                  scale=2,
+                  FC=[64],
+                  init=RandomNormal(stddev=1e-2),)
     gen.summary()
 
-    dis = basic_dis(input_shape=x_train[0].shape,
-                    nf=32,
-                    scale=2,
-                    FC=[64],
-                    init=RandomNormal(stddev=1e-2),)
+    dis = cnn_dis(input_shape=x_train[0].shape,
+                  nf=32,
+                  scale=2,
+                  FC=[64],
+                  init=RandomNormal(stddev=1e-2),)
     dis.summary()
 
     opt = Adam(1e-3, beta_1=0.5, beta_2=0.9)

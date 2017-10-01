@@ -1,6 +1,11 @@
 from mido import MidiFile, Message, MidiTrack, MetaMessage
 import numpy as np
 import os
+from tqdm import tqdm
+from pathos.multiprocessing import ProcessingPool as Pool
+from encoder_decoder import OneHotEncoder, \
+        get_absolute_time, AllInOneEncoder
+# from multiprocessing import Pool
 
 
 class Song(object):
@@ -14,18 +19,6 @@ class Song(object):
 
     def save_as(self, filename):
         self.midi.save(filename)
-
-    # ====================================
-    #       Encoding functions
-    # ====================================
-    def encode_onehot(
-            self,
-            kwargs1={'filter_f': lambda x: x.type in ['note_on', 'note_off'],
-                     'unit': 'beat'},
-            kwargs2={'resolution': 0.25}):
-        msgs, times = self._get_absolute_time(self.midi, **kwargs1)
-        hots = self._get_hots(msgs, times, **kwargs2)
-        return hots
 
     # ====================================
     #       Visualization functions
@@ -44,117 +37,35 @@ class Song(object):
     #       Utility functions
     # ====================================
     @staticmethod
-    def load_from_dir(dirpath, encode='onehot', **kwargs):
+    def load_from_dir(dirpath, encoder=None,
+                      multiprocessing=False, **kwargs):
+        if encoder is None:
+            encoder = OneHotEncoder()
         filelist = []
         for root, _, files in os.walk(dirpath):
             for name in files:
                 filelist.append(os.path.join(root, name))
-        midis = [Song(filename) for filename in filelist]
         data = []
-        for ind, midi in enumerate(midis):
-            print '\t[{:02d}/{:02d}] Handling'.format(ind, len(midis)),\
-                filelist[ind], '...'
-            hots = getattr(midi, 'encode_'+encode)(**kwargs)
-            data.append(hots)
-            print '\t', hots.shape
-        data = np.array(data)
+        if multiprocessing:
+            def handle(filename):
+                midi = Song(filename)
+                hots = encoder(midi.midi)
+                return hots
+            pool = Pool(10)
+            data = np.array(pool.map(handle, filelist))
+        else:
+            for filename in tqdm(filelist):
+                try:
+                    midi = Song(filename)
+                    hots = encoder(midi.midi)
+                    data.append(hots)
+                except:
+                    print "error with {}".format(filename)
+            data = np.array(data)
         return data
 
     def get_absolute_time(self, **kwargs):
-        return self._get_absolute_time(self.midi, **kwargs)
-
-    @staticmethod
-    def _get_absolute_time(
-            source,
-            filter_f=lambda x: True,
-            unit='second',
-            quantize=4):
-        """
-            Translate a relative time-format into an
-                absolute time-format.
-
-            source: source MIDI object
-            filter: filter of notes
-            beat: turn time into beat unit
-            quantize: quantize number to (1/Q)
-                (e.g. Q=4 makes (1/4*beat=) 1/16 the smallest note)
-
-            check http://mido.readthedocs.io/en/latest/midi_files.html?highlight=tick2second
-
-            Minutes |                               |
-            --------|-------------------------------| beats per minute (BPM=4)
-            Beats   | x   x   x   x | x   x   x   x |
-            --------|-------------------------------| ticks per beat (TPB=3)
-            Ticks   |^^^|^^^|^^^|^^^|^^^|^^^|^^^|^^^| or pulses per quarter note (PPQ=3)
-
-            60000 / (BPM * PPQ)
-            (i.e. a 120 BPM track would have a MIDI time of (60000 / (120 * 192)) or 2.604 ms for 1 tick.
-        """
-        tempo = 500000  # 120BPM
-
-        timestamps = []
-        T = 0.0
-        messages = []
-        for msg in source:
-            if msg.type == 'set_tempo':
-                tempo = msg.tempo
-
-            # TODO: whether take in other delta-time
-            if filter_f(msg):
-                if msg.time > 0:
-                    t = float(msg.time)
-                    if unit == 'second':
-                        t = round(t*quantize)/quantize
-                    elif unit == 'beat':
-                        t = round(t*1e6/tempo*quantize)/quantize
-                    else:
-                        raise NotImplemented
-                    T += t
-
-                messages.append(msg)
-                timestamps.append(T)
-
-        return messages, timestamps
-
-    @staticmethod
-    def _get_hots(msgs, times, hots=128, field='note', resolution=1.):
-        """
-            Translate a (msgs, times) pair into a T*hots matrix
-
-            msgs: list of msg
-            times: timestamps
-            resolution: width of time-slice
-            field: which field to extract
-
-            usage:
-            msg, times = getAbsT(source, ...)
-            hots = getHots(msg, times)
-        """
-        n = times[-1]/resolution + 1
-        res = np.zeros((int(n), hots))
-
-        # TODO: use Cython to accelerate
-        T = 0.0
-        msg_ind = 0
-        res_ind = 0
-        while T < times[-1]:
-            # sustain
-            if field == 'note':
-                res[res_ind] = res[res_ind-1]
-
-            while msg_ind < len(msgs) and T >= times[msg_ind]:
-                msg = msgs[msg_ind]
-                if field == 'note':
-                    if msg.type == 'note_off' or msg.velocity == 0:
-                        res[res_ind, msg.__dict__[field]] = 0.
-                    else:
-                        res[res_ind, msg.__dict__[field]] = 1.
-                else:
-                    raise NotImplemented
-                msg_ind += 1
-            res_ind += 1
-            T += resolution
-        return res
+        return get_absolute_time(self.midi, **kwargs)
 
     @staticmethod
     def _copy(source, track, filter_f=lambda x: True, coef=1000):

@@ -14,19 +14,20 @@ import shutil
 from keras.layers import Conv2D, Dense, Activation, \
     Input, BatchNormalization, Reshape, \
     UpSampling2D, Conv2DTranspose, LeakyReLU, \
-    Flatten, LSTM, Dropout
+    Flatten, LSTM, Dropout, TimeDistributed
 from keras.models import Model, Sequential
 from keras.optimizers import Adam
+from encoder_decoder import AllInOneEncoder
 
 import argparse
 parser = argparse.ArgumentParser(description='GAN-RNN Model')
-parser.add_argument('--activation', type=str, default='tanh',
+parser.add_argument('--activation', type=str, default='softmax',
                     help='define activation and normalization range')
 parser.add_argument('--feed', type=str, default='first',
                     help='feed code only in the first place or all]')
 
 parser.add_argument('--code_dim', type=int, default=200)
-parser.add_argument('--note_dim', type=int, default=128)
+# parser.add_argument('--note_dim', type=int, default=128)
 parser.add_argument('--seq_len', type=int, default=100)
 parser.add_argument('--nbatch', type=int, default=32)
 parser.add_argument('--niter', type=int, default=1000)
@@ -43,28 +44,44 @@ args = parser.parse_args()
 print args
 
 
-def basic_gen(coding_shape,
-              seq_shape,
-              lstm=[128]):
+def rnn_gen(coding_shape,
+            seq_shape,
+            lstm=[128],
+            fc=[]):
     """
         coding should be in (bs, len, code_dim)
     """
     x = code = Input(coding_shape)
 
     for lstm_i in lstm:
-        x = LSTM(lstm_i, return_sequences=True)(x)
-    x = Activation('tanh')(x)
+        x = LSTM(lstm_i, return_sequences=True, dropout=0.5)(x)
+
+    if len(fc) > 0:
+        fcx = fc_input = Input(K.get_variable_shape(x)[2:])
+        for ind, fc_i in enumerate(fc):
+            fcx = Dense(fc_i, )(fcx)
+            if ind == len(fc)-1:
+                fcx = Activation(args.activation)(fcx)
+                fcx = Dropout(0.5)(fcx)
+            else:
+                fcx = LeakyReLU(0.2)(fcx)
+        fc_model = Model(fc_input, fcx)
+        fc_model.summary()
+        x = TimeDistributed(fc_model)(x)
+    else:
+        x = Activation(args.activation)(x)
     return Model(code, x)
 
 
-def basic_dis(seq_shape, lstm=[128], fc=[10]):
+def rnn_dis(seq_shape, lstm=[128], fc=[10]):
     x = seq = Input(seq_shape)
 
     for lstm_i in lstm[:-1]:
-        x = LSTM(lstm_i, return_sequences=True, )(x)
+        x = LSTM(lstm_i, return_sequences=True,)(x)
     x = LSTM(lstm[-1])(x)
     for fc_i in fc:
-        x = Dense(fc_i, activation='relu')(x)
+        x = Dense(fc_i)(x)
+        x = LeakyReLU(0.2)(x)
     x = Dense(1, activation='sigmoid')(x)
     return Model(seq, x)
 
@@ -72,7 +89,7 @@ def basic_dis(seq_shape, lstm=[128], fc=[10]):
 if __name__ == '__main__':
     seq_len = args.seq_len
     code_dim = args.code_dim
-    note_dim = args.note_dim
+    # note_dim = args.note_dim
     niter = args.niter
     nbatch = args.nbatch
     vis_iterval = args.vis_interval
@@ -86,9 +103,10 @@ if __name__ == '__main__':
     os.mkdir(vis_dir)
 
     # data preparation
-    data = Song.load_from_dir("./datasets/easymusicnotes/")
-    if args.activation == 'tanh':
-        data = data*2 - 1
+# data = Song.load_from_dir("./datasets/easymusicnotes/")
+# data = Song.load_from_dir("./datasets/e-comp/", encoder=AllInOneEncoder())
+    data = np.load('./datasets/e-comp-allinone.npz')['data']
+    note_dim = data[0].shape[-1]
 
     def data_generator(bs):
         indices = np.random.randint(data.shape[0], size=(bs,))
@@ -96,7 +114,10 @@ if __name__ == '__main__':
         for ind_i in indices:
             start = np.random.randint(data[ind_i].shape[0]-seq_len)
             x.append(data[ind_i][start:start+seq_len])
-        return np.array(x)
+        x = np.array(x).astype('float')
+        if args.activation == 'tanh':
+            x = x*2 - 1
+        return x
 
     def code_generator(bs):
         Z = np.random.uniform(-1., 1.,
@@ -111,28 +132,31 @@ if __name__ == '__main__':
         return Z_pad
 
     # component definition
-    gen = basic_gen(coding_shape=(seq_len, code_dim),
-                    seq_shape=(seq_len, note_dim),
-                    lstm=[512, 512, 128])
+    gen = rnn_gen(coding_shape=(seq_len, code_dim),
+                  seq_shape=(seq_len, note_dim),
+                  lstm=[512, 512, 512],
+                  fc=[note_dim])
     gen.summary()
 
-    dis = basic_dis(seq_shape=(seq_len, note_dim),
-                    lstm=[512, 512],
-                    fc=[])
+    dis = rnn_dis(seq_shape=(seq_len, note_dim),
+                  lstm=[512, 512],
+                  fc=[])
     dis.summary()
 
     # model definition
-    opt = Adam(1e-3, beta_1=0.5, beta_2=0.9)
+    gen_opt = Adam(5e-4, beta_1=0.5, beta_2=0.9)
+    dis_opt = SGD(5e-4)  # , momentum=0.9)
+
     gendis = Sequential([gen, dis])
     dis.trainable = False
-    gendis.compile(optimizer=opt, loss='binary_crossentropy')
+    gendis.compile(optimizer=gen_opt, loss='binary_crossentropy')
 
     shape = dis.get_input_shape_at(0)[1:]
     gen_input, real_input = Input(shape), Input(shape)
     dis2batch = Model([gen_input, real_input],
                       [dis(gen_input), dis(real_input)])
     dis.trainable = True
-    dis2batch.compile(optimizer=opt,
+    dis2batch.compile(optimizer=dis_opt,
                       loss='binary_crossentropy',
                       metrics=['binary_accuracy'])
 

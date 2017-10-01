@@ -1,77 +1,92 @@
-from midiwrapper import Song
-import os
 import numpy as np
+from keras.layers import Input, LSTM, Dense,\
+        Activation, Dropout, LeakyReLU,\
+        TimeDistributed
+from keras.models import Model, load_model
+from keras.optimizers import Adam
+from midiwrapper import Song
+from encoder_decoder import AllInOneEncoder
+from keras.utils.np_utils import to_categorical
+from keras.callbacks import ModelCheckpoint
 
-from keras.layers import Input, LSTM, Dense, Activation, Dropout
-from keras.models import Model
-from keras.optimizers import RMSprop
+
+def define_model(shape, stateful=False):
+    if stateful:
+        x = input = Input(batch_shape=shape)
+    else:
+        x = input = Input(shape)
+    note_dim = shape[-1]
+    x = LSTM(512,
+             return_sequences=True,
+             implementation=2,
+             stateful=stateful)(x)
+    x = LSTM(512,
+             return_sequences=True,
+             implementation=2,
+             stateful=stateful)(x)
+    x = LSTM(512,
+             return_sequences=True,
+             implementation=2,
+             stateful=stateful)(x)
+    x = TimeDistributed(Dense(note_dim))(x)
+    x = TimeDistributed(Activation('softmax'))(x)
+    model = Model(input, x)
+    return model
 
 
 if __name__ == '__main__':
     DIR = 'datasets/easymusicnotes/'
-    # DIR = 'datasets/TPD/jazz/'
-    LEN = 20  # length of input
-    N = 10000  # number of training sequences
+    # DIR 2 'datasets/TPD/jazz/'
+    LEN = 2000  # length of input
+    DIM = 128+128+100+7
 
     # preparing files
-    print 'Reading files ...'
-    filelist = []
-    for root, _, files in os.walk(DIR):
-        for name in files:
-            filelist.append(os.path.join(root, name))
-    midis = [Song(filename) for filename in filelist]
-    data = []
-    for ind, midi in enumerate(midis):
-        print '\t[{:02d}/{:02d}] Handling'.format(ind, len(midis)),\
-            filelist[ind], '...'
-        hots = midi.encode_onehot(
-              {'filter_f': lambda x: x.type in ['note_on', 'note_off'],
-                  'unit': 'beat'},
-              {'resolution': 0.25})
-        data.append(hots)
-        print '\t', hots.shape
-    data = np.array(data)
+    # data = Song.load_from_dir("./datasets/easymusicnotes/",
+    #                           encoder=AllInOneEncoder(return_indices=True))
+    # data = Song.load_from_dir("./datasets/e-comp/",
+    #                           encoder=AllInOneEncoder(return_indices=True))
+    data = np.load('./datasets/e-comp-allinone.npz')['data']
 
     # sample training data
-    print 'Sampling ...'
-    x = []
-    y = []
-    for _ in range(N):
-        ind = np.random.randint(len(data))
-        start = np.random.randint(data[ind].shape[0]-LEN-1)
-        x.append(data[ind][start: start+LEN])
-        y.append(data[ind][start+LEN])
+    def data_generator():
+        batch_size = 64
+        while True:
+            x = []
+            y = []
+            for _ in range(batch_size):
+                ind = np.random.randint(len(data))
+                start = np.random.randint(data[ind].shape[0]-LEN-1)
+                x.append(data[ind][start:start+LEN])
+                y.append(data[ind][start+1:start+LEN+1])
+            x = np.array(x)
+            y = np.array(y)
 
-    x = np.array(x)  # (N, LEN, dim)
-    y = np.array(y)  # (N, dim)
-    dim = x.shape[-1]
-    print '\tx.shape =', x.shape, 'y.shape =', y.shape
-#   np.savez("temp/data.npz", x=x, y=y)
-#   print '\tsaved to temp/data.npz'
+            # data argument
+            # shift = np.random.choice([-3, +3, -4, +4])
+            # x[x < 256] = np.clip(x[x < 256] + shift, 0, 256)
+            # y[y < 256] = np.clip(y[y < 256] + shift, 0, 256)
 
-    train_x = x[:int(N*0.8)]
-    train_y = y[:int(N*0.8)]
-    valid_x = x[int(N*0.8):]
-    valid_y = y[int(N*0.8):]
+            # sparse to complex
+            x = to_categorical(x.flatten(), num_classes=DIM).\
+                reshape(x.shape[0], x.shape[1], DIM)
+            y = y.reshape(x.shape[0], x.shape[1], 1)
+            yield (x, y)
 
     # Build models
-    x = input = Input((LEN, dim))
-#   x = input = Input(batch_shape=(1,LEN, dim),)
-    x = LSTM(512, stateful=False, return_sequences=True)(x)
-    x = LSTM(512, stateful=False, return_sequences=True)(x)
-    x = LSTM(512, stateful=False)(x)
-    x = Dropout(0.5)(x)
-    x = Dense(500, activation='relu')(x)
-    x = Dropout(0.5)(x)
-    x = Dense(128, activation='sigmoid')(x)
-    model = Model(input, x)
-    model.compile(loss='binary_crossentropy',
-                  optimizer=RMSprop(1e-3),
-                  metrics=[])
+    note_dim = DIM  # data[0].shape[-1]
+    model = define_model((LEN, note_dim))
 
-    model.fit(train_x, train_y,
-              epochs=200,
-              validation_data=(valid_x, valid_y),
-              batch_size=32)
-    # batch_size=1)
+#   model = load_model('temp/simple_rnn.h5')
+    model.load_weights('temp/simple_rnn.h5')
+    model.compile(loss='sparse_categorical_crossentropy',
+                  optimizer=Adam(1e-5))
+
+    checkpoint = ModelCheckpoint(filepath='temp/simple_rnn.h5',
+                                 monitor='loss',
+                                 verbose=1,
+                                 save_best_only=True,)
+    model.fit_generator(data_generator(),
+                        steps_per_epoch=20,
+                        epochs=500,
+                        callbacks=[checkpoint])
     model.save("temp/simple_rnn.h5")

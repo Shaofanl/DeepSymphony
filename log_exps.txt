@@ -13,9 +13,7 @@
     randomize the input when slient
     > no slience 
   ===>0000.mid
-
-  > try stateful RNN
-    but not aligned with one song when training
+> try stateful RNN but not aligned with one song when training
     > not good, all slience
 
   > change mse to binary_crossentropy
@@ -91,7 +89,7 @@
    add random decay in the generation
      random connection of pieces 0022.mid
 
-09182017
+09192017
   gan rnn1 (commit "gan rnn")
     cannot even learn the patter that most places are black
     stop converging after 500 
@@ -103,6 +101,34 @@
       but don't have inner patter (maybe the dataset is too small?)
       display/9900.png vs display/real.png
 
+0922~0925
+  Gcnn_Dcnnn
+  Grnn_Drnn
+
+0925~0928
+  refactory the encoder
+  encode again
+  large dataset
+
+  updated simple_rnn on e-comp (len=2000)
+    0023.mid
+  updated simple_rnn on esay (len=100)
+    first one with rhythm: 0024.mid (loss=1.1757)
+    0025.mid (loss=0.7159)
+    0026.mid (loss=0.4621)
+    0027.mid (loss=0.2543)
+    0028.mid (loss=0.2166) plagirism?
+    0029.mid (loss=0.2048, seed=32) plagirism?
+    
+    0031.mid (loss=0.3579, seed=32) data argument
+    0032.mid favorite one 
+
+0930
+  tried all night
+    e-comp-all, loss = 1.8979 (0033.mid)
+      awesome
+    e-comp-all, loss = 1.85  (0034.mid)
+      long one, borrow
 
 
 
