@@ -23,7 +23,7 @@ def get_openning(LEN, mode='borrow'):
 
 
 if __name__ == '__main__':
-    SONG_LEN = 10000
+    SONG_LEN = 6000
     THRESHOLD = 1.00
 
     mid = Song()
@@ -39,9 +39,9 @@ if __name__ == '__main__':
     sustain = np.zeros((128))
     current_t = 0.
 
-    np.random.seed(32)  # 32)
+    np.random.seed( sum(map(ord, 'wuxintong')) )  # 32)
 
-    seq = get_openning(LEN, mode='borrow')
+    seq = get_openning(LEN, mode='random')
     for seqi in seq:
         res = model.predict(np.array([[seqi]]))
     res = model.predict(np.zeros((1, 1, 363)))
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         notes.append(note)
 
     # handle
-    MAX_SUSTAIN = 0.8
+    MAX_SUSTAIN = 2.0
     last_appear = np.ones((128,)) * (-1)
     post_process = []
     current_t = 0.

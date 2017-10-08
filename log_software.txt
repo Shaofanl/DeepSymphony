@@ -5,3 +5,5 @@ musescore
 python
         rtmidi
         mido
+
+timidity simple_rnn.mid -Ow -o simple_rnn.mp3
