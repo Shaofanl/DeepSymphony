@@ -1,2 +1,3 @@
+# deprecated
 mido==1.2.8
 numpy==1.13.1

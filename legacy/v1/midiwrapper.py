@@ -3,8 +3,6 @@ import numpy as np
 import os
 from tqdm import tqdm
 from pathos.multiprocessing import ProcessingPool as Pool
-from encoder_decoder import OneHotEncoder, \
-        get_absolute_time, AllInOneEncoder
 # from multiprocessing import Pool
 
 
@@ -37,10 +35,8 @@ class Song(object):
     #       Utility functions
     # ====================================
     @staticmethod
-    def load_from_dir(dirpath, encoder=None,
+    def load_from_dir(dirpath, encoder,
                       multiprocessing=False, **kwargs):
-        if encoder is None:
-            encoder = OneHotEncoder()
         filelist = []
         for root, _, files in os.walk(dirpath):
             for name in files:
@@ -63,9 +59,6 @@ class Song(object):
                     print "error with {}".format(filename)
             data = np.array(data)
         return data
-
-    def get_absolute_time(self, **kwargs):
-        return get_absolute_time(self.midi, **kwargs)
 
     @staticmethod
     def _copy(source, track, filter_f=lambda x: True, coef=1000):

@@ -1,20 +1,27 @@
 import numpy as np
 from mido import Message
+import abc
 
 
 class EncoderBase(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         raise NotImplemented
 
+    @abc.abstractmethod
     def encode(self, seq, **kwargs):
         raise NotImplemented
 
+    @abc.abstractmethod
     def __call__(self, seq, **inputs):
         return self.encode(seq, **inputs)
 
+    @abc.abstractmethod
     def decode(self, seq, **kwargs):
         raise NotImplemented
 
+    @abc.abstractmethod
     def event_to_code(self, event):
         raise NotImplemented
 
@@ -96,8 +103,7 @@ def get_hots(msgs, times, hots=128, field='note', resolution=1.):
 
         usage:
         msg, times = getAbsT(source, ...)
-        hots = getHots(msg, times)
-    """
+        hots = getHots(msg, times) """
     n = times[-1]/resolution + 1
     res = np.zeros((int(n), hots))
 
@@ -240,5 +246,6 @@ if __name__ == '__main__':
 #   for filename in tqdm(filelist):
 #       midi = Song(filename)
 #       hots = encoder(midi.midi).astype('bool')
-#       np.savez_compressed(os.path.join(tmppath, filename.split('/')[-1]+'.npz'),
+#       np.savez_compressed
+#       (os.path.join(tmppath, filename.split('/')[-1]+'.npz'),
 #                           hots=hots)

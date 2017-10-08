@@ -89,4 +89,4 @@ if __name__ == '__main__':
                         steps_per_epoch=20,
                         epochs=500,
                         callbacks=[checkpoint])
-    model.save("temp/simple_rnn.h5")
+#   model.save("temp/simple_rnn.h5")

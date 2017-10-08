@@ -94,4 +94,4 @@ if __name__ == '__main__':
     # , _MIDO_TIME_SCALE=0.6):
     for msgi in AllInOneEncoder().decode(post_process):
         track.append(msgi)
-        mid.save_as('simple_rnn.mid')
+    mid.save_as('simple_rnn.mid')
