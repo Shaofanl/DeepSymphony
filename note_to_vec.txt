@@ -1,0 +1,726 @@
+Most similar notes with <C0 on>
+    <D#9 on>, <D1 off>, <C#10 off>, <D10 off>, <A#0 on>
+Most similar notes with <C#0 on>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <C#0 on>
+Most similar notes with <D0 on>
+    <B9 off>, <E0 on>, <G#0 on>, <D#1 on>, <D10 on>
+Most similar notes with <D#0 on>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#0 on>
+Most similar notes with <E0 on>
+    <B9 off>, <D0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <F0 on>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <F#0 on>
+    <B9 off>, <D0 on>, <E0 on>, <G#0 on>, <G0 off>
+Most similar notes with <G0 on>
+    <B9 off>, <E0 on>, <G0 on>, <G#0 on>, <G0 off>
+Most similar notes with <G#0 on>
+    <D0 on>, <B9 off>, <E0 on>, <G0 off>, <D#1 on>
+Most similar notes with <A0 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <A#0 on>
+    <B9 off>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <B0 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <C1 on>
+    <D0 on>, <E0 on>, <G#0 on>, <D#1 on>, <G0 off>
+Most similar notes with <C#1 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <D1 on>
+    <B9 off>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <D#1 on>
+    <B9 off>, <D0 on>, <E0 on>, <G#0 on>, <G0 off>
+Most similar notes with <E1 on>
+    <D0 on>, <B9 off>, <E0 on>, <G0 off>, <G#0 on>
+Most similar notes with <F1 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <F#1 on>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <G1 on>
+    <B9 off>, <D0 on>, <E0 on>, <G#0 on>, <G0 off>
+Most similar notes with <G#1 on>
+    <B9 off>, <E0 on>, <G#1 on>, <G#0 on>, <G0 off>
+Most similar notes with <A1 on>
+    <D10 on>, <A#0 off>, <G0 off>, <E0 on>, <E1 on>
+Most similar notes with <A#1 on>
+    <E0 on>, <D10 on>, <A#0 off>, <G0 off>, <D10 off>
+Most similar notes with <B1 on>
+    <D10 on>, <G#0 on>, <A#0 off>, <G0 off>, <E0 on>
+Most similar notes with <C2 on>
+    <delay 450.0>, <delay 410.0>, <delay 430.0>, <delay 440.0>, <delay 420.0>
+Most similar notes with <C#2 on>
+    <delay 450.0>, <delay 410.0>, <delay 440.0>, <delay 430.0>, <delay 470.0>
+Most similar notes with <D2 on>
+    <delay 410.0>, <delay 450.0>, <delay 430.0>, <delay 440.0>, <F#8 on>
+Most similar notes with <D#2 on>
+    <delay 450.0>, <delay 410.0>, <delay 430.0>, <delay 440.0>, <delay 420.0>
+Most similar notes with <E2 on>
+    <delay 410.0>, <delay 450.0>, <delay 430.0>, <F8 on>, <D2 on>
+Most similar notes with <F2 on>
+    <D2 on>, <F8 on>, <F8 off>, <D2 off>, <delay 410.0>
+Most similar notes with <F#2 on>
+    <delay 430.0>, <D2 off>, <delay 410.0>, <delay 390.0>, <F#2 on>
+Most similar notes with <G2 on>
+    <G2 on>, <F8 off>, <D2 off>, <delay 430.0>, <F8 on>
+Most similar notes with <G#2 on>
+    <delay 410.0>, <F8 off>, <delay 430.0>, <F8 on>, <delay 400.0>
+Most similar notes with <A2 on>
+    <F8 on>, <D2 off>, <E2 off>, <D2 on>, <F8 off>
+Most similar notes with <A#2 on>
+    <D#2 on>, <D2 off>, <A#2 off>, <F8 on>, <D2 on>
+Most similar notes with <B2 on>
+    <D2 on>, <D2 off>, <F8 off>, <E2 off>, <F8 on>
+Most similar notes with <C3 on>
+    <C3 off>, <C4 off>, <C4 on>, <G3 on>, <G3 off>
+Most similar notes with <C#3 on>
+    <C#3 off>, <F#2 on>, <F#2 off>, <D#2 on>, <F8 off>
+Most similar notes with <D3 on>
+    <D3 off>, <D2 off>, <D4 on>, <D4 off>, <D2 on>
+Most similar notes with <D#3 on>
+    <D#3 off>, <D#4 on>, <D#4 off>, <G#3 on>, <G#2 off>
+Most similar notes with <E3 on>
+    <E3 off>, <B3 off>, <B3 on>, <E4 on>, <E4 off>
+Most similar notes with <F3 on>
+    <F3 off>, <C4 off>, <C3 off>, <C4 on>, <F4 off>
+Most similar notes with <F#3 on>
+    <F#3 off>, <F#4 off>, <F#4 on>, <F#2 off>, <F#2 on>
+Most similar notes with <G3 on>
+    <G3 off>, <G4 off>, <G4 on>, <C4 off>, <C4 on>
+Most similar notes with <G#3 on>
+    <G#3 off>, <D#4 off>, <D#4 on>, <G#4 off>, <G#4 on>
+Most similar notes with <A3 on>
+    <A3 off>, <A4 off>, <A4 on>, <E4 off>, <E4 on>
+Most similar notes with <A#3 on>
+    <A#3 off>, <A#4 on>, <A#4 off>, <D#4 on>, <D#4 off>
+Most similar notes with <B3 on>
+    <B3 off>, <B4 off>, <B4 on>, <E4 off>, <E3 on>
+Most similar notes with <C4 on>
+    <C4 off>, <C5 on>, <C5 off>, <G4 off>, <C3 off>
+Most similar notes with <C#4 on>
+    <C#4 off>, <C#5 off>, <C#5 on>, <G#4 off>, <G#3 on>
+Most similar notes with <D4 on>
+    <D4 off>, <D5 off>, <D5 on>, <G3 on>, <G3 off>
+Most similar notes with <D#4 on>
+    <D#4 off>, <D#5 off>, <D#5 on>, <G#3 on>, <G#3 off>
+Most similar notes with <E4 on>
+    <E4 off>, <E5 off>, <E5 on>, <G4 on>, <G4 off>
+Most similar notes with <F4 on>
+    <F4 off>, <F5 on>, <F5 off>, <G#4 off>, <G#4 on>
+Most similar notes with <F#4 on>
+    <F#4 off>, <F#5 on>, <F#5 off>, <A4 off>, <A4 on>
+Most similar notes with <G4 on>
+    <G4 off>, <G5 on>, <G5 off>, <C5 off>, <C5 on>
+Most similar notes with <G#4 on>
+    <G#4 off>, <G#5 off>, <G#5 on>, <F4 on>, <D#4 off>
+Most similar notes with <A4 on>
+    <A4 off>, <A5 on>, <A5 off>, <C5 on>, <C5 off>
+Most similar notes with <A#4 on>
+    <A#4 off>, <A#5 off>, <A#5 on>, <C#5 off>, <A#3 off>
+Most similar notes with <B4 on>
+    <B4 off>, <B5 off>, <B5 on>, <D5 off>, <D5 on>
+Most similar notes with <C5 on>
+    <C5 off>, <C6 off>, <C6 on>, <delay 0.0>, <C4 off>
+Most similar notes with <C#5 on>
+    <C#5 off>, <C#6 on>, <C#6 off>, <E5 on>, <E5 off>
+Most similar notes with <D5 on>
+    <D5 off>, <D6 off>, <D6 on>, <F5 off>, <F5 on>
+Most similar notes with <D#5 on>
+    <D#5 off>, <D#6 off>, <D#6 on>, <D#4 off>, <D#4 on>
+Most similar notes with <E5 on>
+    <E5 off>, <E6 on>, <E6 off>, <delay 0.0>, <G5 off>
+Most similar notes with <F5 on>
+    <F5 off>, <F4 off>, <D5 on>, <D5 off>, <F4 on>
+Most similar notes with <F#5 on>
+    <F#5 off>, <F#4 on>, <F#4 off>, <F#6 on>, <F#6 off>
+Most similar notes with <G5 on>
+    <G5 off>, <G4 off>, <G4 on>, <G6 off>, <delay 0.0>
+Most similar notes with <G#5 on>
+    <G#5 off>, <G#4 on>, <G#4 off>, <F5 on>, <F5 off>
+Most similar notes with <A5 on>
+    <A5 off>, <A4 off>, <A4 on>, <velocity 64>, <C6 on>
+Most similar notes with <A#5 on>
+    <A#5 off>, <A#4 on>, <A#4 off>, <G5 off>, <G5 on>
+Most similar notes with <B5 on>
+    <B5 off>, <D6 off>, <B4 off>, <D6 on>, <B4 on>
+Most similar notes with <C6 on>
+    <C6 off>, <C5 on>, <C5 off>, <velocity 64>, <velocity 32>
+Most similar notes with <C#6 on>
+    <C#6 off>, <D#6 off>, <C#5 on>, <C#5 off>, <D#6 on>
+Most similar notes with <D6 on>
+    <D6 off>, <E6 off>, <F6 off>, <E6 on>, <F6 on>
+Most similar notes with <D#6 on>
+    <D#6 off>, <D#5 off>, <D#5 on>, <C#6 on>, <C#6 off>
+Most similar notes with <E6 on>
+    <E6 off>, <E5 on>, <E5 off>, <D6 on>, <D6 off>
+Most similar notes with <F6 on>
+    <F6 off>, <D6 on>, <D6 off>, <G6 off>, <G6 on>
+Most similar notes with <F#6 on>
+    <F#6 off>, <F#5 on>, <F#5 off>, <A6 on>, <A6 off>
+Most similar notes with <G6 on>
+    <G6 off>, <E6 on>, <G5 on>, <E6 off>, <F6 on>
+Most similar notes with <G#6 on>
+    <G#6 off>, <A#6 off>, <A#6 on>, <F6 on>, <F#6 on>
+Most similar notes with <A6 on>
+    <A6 off>, <G6 off>, <G6 on>, <C7 off>, <C7 on>
+Most similar notes with <A#6 on>
+    <A#6 off>, <G#6 off>, <G#6 on>, <G6 on>, <G6 off>
+Most similar notes with <B6 on>
+    <B6 off>, <D7 off>, <A6 on>, <A6 off>, <D7 on>
+Most similar notes with <C7 on>
+    <C7 off>, <D7 off>, <D7 on>, <A6 on>, <A6 off>
+Most similar notes with <C#7 on>
+    <C#7 off>, <D#7 off>, <D#7 on>, <E7 on>, <E7 off>
+Most similar notes with <D7 on>
+    <D7 off>, <E7 off>, <E7 on>, <C7 on>, <C7 off>
+Most similar notes with <D#7 on>
+    <D#7 off>, <C#7 on>, <C#7 off>, <G#7 off>, <F#7 off>
+Most similar notes with <E7 on>
+    <E7 off>, <D7 on>, <G7 on>, <D7 off>, <G7 off>
+Most similar notes with <F7 on>
+    <F7 off>, <G7 off>, <G7 on>, <D7 on>, <D7 off>
+Most similar notes with <F#7 on>
+    <F#7 off>, <G#7 off>, <G#7 on>, <A#7 off>, <A7 on>
+Most similar notes with <G7 on>
+    <G7 off>, <C8 off>, <A7 off>, <C8 on>, <A7 on>
+Most similar notes with <G#7 on>
+    <G#7 off>, <A#7 off>, <C#8 off>, <A#7 on>, <F#7 on>
+Most similar notes with <A7 on>
+    <A7 off>, <D8 on>, <F8 on>, <C8 off>, <D8 off>
+Most similar notes with <A#7 on>
+    <A#7 off>, <F8 off>, <F8 on>, <D8 on>, <D8 off>
+Most similar notes with <B7 on>
+    <F8 off>, <F8 on>, <D8 on>, <D8 off>, <E8 on>
+Most similar notes with <C8 on>
+    <F8 on>, <F8 off>, <D8 on>, <D8 off>, <C8 off>
+Most similar notes with <C#8 on>
+    <F8 on>, <F8 off>, <F#8 on>, <C#8 off>, <D8 off>
+Most similar notes with <D8 on>
+    <F8 off>, <F8 on>, <F#8 on>, <D2 on>, <D2 off>
+Most similar notes with <D#8 on>
+    <F8 off>, <D#8 off>, <F8 on>, <E8 off>, <E8 on>
+Most similar notes with <E8 on>
+    <F8 on>, <F8 off>, <D2 on>, <F#8 on>, <F#8 off>
+Most similar notes with <F8 on>
+    <F8 off>, <delay 410.0>, <F#8 on>, <delay 440.0>, <delay 450.0>
+Most similar notes with <F#8 on>
+    <delay 450.0>, <delay 470.0>, <delay 440.0>, <F#8 off>, <delay 430.0>
+Most similar notes with <G8 on>
+    <A#0 off>, <D10 off>, <G0 off>, <E9 on>, <D10 on>
+Most similar notes with <G#8 on>
+    <D10 on>, <G0 off>, <G#0 on>, <A#0 off>, <E0 on>
+Most similar notes with <A8 on>
+    <G0 off>, <D10 on>, <G#0 on>, <A#0 off>, <E1 on>
+Most similar notes with <A#8 on>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <E0 on>
+Most similar notes with <B8 on>
+    <D10 on>, <A#0 off>, <G0 off>, <E0 on>, <E1 on>
+Most similar notes with <C9 on>
+    <D10 on>, <G0 off>, <G#0 on>, <A#0 off>, <E1 on>
+Most similar notes with <C#9 on>
+    <B9 off>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <D9 on>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <D#9 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <E9 on>
+    <D0 on>, <E0 on>, <G#0 on>, <D#1 on>, <E9 on>
+Most similar notes with <F9 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <F#9 on>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <G9 on>
+    <B9 off>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <G#9 on>
+    <G#9 on>, <D0 on>, <E0 on>, <G0 off>, <G#0 on>
+Most similar notes with <A9 on>
+    <B9 off>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <A#9 on>
+    <B9 off>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <B9 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <C10 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <C#10 on>
+    <D0 on>, <E0 on>, <G#0 on>, <D#1 on>, <G0 off>
+Most similar notes with <D10 on>
+    <B9 off>, <D0 on>, <E0 on>, <G0 off>, <D#1 on>
+Most similar notes with <D#10 on>
+    <D0 on>, <E0 on>, <G#0 on>, <D#1 on>, <G0 off>
+Most similar notes with <E10 on>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <F10 on>
+    <B9 off>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <F#10 on>
+    <D0 on>, <E0 on>, <G0 off>, <D#1 on>, <G#0 on>
+Most similar notes with <G10 on>
+    <B9 off>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <C0 off>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <C#0 off>
+    <B9 off>, <D0 on>, <E0 on>, <G0 off>, <G#0 on>
+Most similar notes with <D0 off>
+    <D0 on>, <E0 on>, <G0 off>, <D#1 on>, <G#0 on>
+Most similar notes with <D#0 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <E0 off>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <F0 off>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <F#0 off>
+    <D0 on>, <F#0 off>, <E0 on>, <G0 off>, <G#0 on>
+Most similar notes with <G0 off>
+    <B9 off>, <D0 on>, <E0 on>, <G#0 on>, <D10 on>
+Most similar notes with <G#0 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <A0 off>
+    <D0 on>, <E0 on>, <G0 off>, <D#1 on>, <G#0 on>
+Most similar notes with <A#0 off>
+    <B9 off>, <D0 on>, <E0 on>, <G#0 on>, <G0 off>
+Most similar notes with <B0 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <C1 off>
+    <B9 off>, <E0 on>, <G0 off>, <C1 off>, <G#0 on>
+Most similar notes with <C#1 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <D1 off>
+    <D1 off>, <D0 on>, <E0 on>, <G0 off>, <G#0 on>
+Most similar notes with <D#1 off>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <E1 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <F1 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <F#1 off>
+    <B9 off>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <G1 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <G#1 off>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <A1 off>
+    <D10 on>, <A#0 off>, <G0 off>, <G#0 on>, <E0 on>
+Most similar notes with <A#1 off>
+    <G0 off>, <E0 on>, <A#0 off>, <D10 on>, <D10 off>
+Most similar notes with <B1 off>
+    <G0 off>, <A#0 off>, <D10 on>, <D#1 on>, <D0 on>
+Most similar notes with <C2 off>
+    <delay 450.0>, <delay 410.0>, <delay 440.0>, <delay 470.0>, <delay 430.0>
+Most similar notes with <C#2 off>
+    <delay 440.0>, <delay 450.0>, <delay 410.0>, <delay 430.0>, <delay 470.0>
+Most similar notes with <D2 off>
+    <delay 450.0>, <delay 440.0>, <delay 410.0>, <delay 430.0>, <delay 420.0>
+Most similar notes with <D#2 off>
+    <delay 410.0>, <delay 430.0>, <delay 450.0>, <delay 440.0>, <delay 420.0>
+Most similar notes with <E2 off>
+    <delay 410.0>, <delay 430.0>, <delay 450.0>, <D2 on>, <delay 440.0>
+Most similar notes with <F2 off>
+    <F8 off>, <D2 off>, <D2 on>, <F8 on>, <delay 410.0>
+Most similar notes with <F#2 off>
+    <D2 on>, <F#2 off>, <D2 off>, <delay 390.0>, <delay 400.0>
+Most similar notes with <G2 off>
+    <G2 off>, <delay 430.0>, <D2 on>, <F8 off>, <delay 400.0>
+Most similar notes with <G#2 off>
+    <delay 410.0>, <F8 on>, <delay 400.0>, <D2 on>, <delay 390.0>
+Most similar notes with <A2 off>
+    <D2 on>, <D2 off>, <F8 on>, <F8 off>, <E2 off>
+Most similar notes with <A#2 off>
+    <F8 on>, <D2 off>, <D#2 on>, <D2 on>, <F8 off>
+Most similar notes with <B2 off>
+    <D2 on>, <D2 off>, <F8 off>, <F8 on>, <E2 on>
+Most similar notes with <C3 off>
+    <C3 on>, <C4 off>, <C4 on>, <G3 on>, <G3 off>
+Most similar notes with <C#3 off>
+    <C#3 on>, <F#2 off>, <F#2 on>, <F8 on>, <F8 off>
+Most similar notes with <D3 off>
+    <D3 on>, <D4 on>, <D4 off>, <D2 off>, <G2 on>
+Most similar notes with <D#3 off>
+    <D#3 on>, <D#4 on>, <D#4 off>, <A#2 off>, <G#2 on>
+Most similar notes with <E3 off>
+    <E3 on>, <E4 off>, <E4 on>, <B3 off>, <B3 on>
+Most similar notes with <F3 off>
+    <F3 on>, <C4 off>, <F4 off>, <C3 off>, <C4 on>
+Most similar notes with <F#3 off>
+    <F#3 on>, <F#4 off>, <F#4 on>, <F#2 off>, <F#2 on>
+Most similar notes with <G3 off>
+    <G3 on>, <G4 off>, <G4 on>, <C4 on>, <C4 off>
+Most similar notes with <G#3 off>
+    <G#3 on>, <D#4 off>, <D#4 on>, <G#4 off>, <G#4 on>
+Most similar notes with <A3 off>
+    <A3 on>, <A4 on>, <A4 off>, <E4 off>, <E4 on>
+Most similar notes with <A#3 off>
+    <A#3 on>, <A#4 on>, <A#4 off>, <D#4 on>, <D#4 off>
+Most similar notes with <B3 off>
+    <B3 on>, <B4 off>, <B4 on>, <E4 off>, <E4 on>
+Most similar notes with <C4 off>
+    <C4 on>, <C5 on>, <C5 off>, <C3 off>, <C3 on>
+Most similar notes with <C#4 off>
+    <C#4 on>, <C#5 off>, <C#5 on>, <G#3 on>, <G#4 off>
+Most similar notes with <D4 off>
+    <D4 on>, <D5 off>, <D5 on>, <G3 on>, <G3 off>
+Most similar notes with <D#4 off>
+    <D#4 on>, <D#5 off>, <D#5 on>, <G#3 on>, <G#3 off>
+Most similar notes with <E4 off>
+    <E4 on>, <E5 off>, <E5 on>, <G4 off>, <G4 on>
+Most similar notes with <F4 off>
+    <F4 on>, <F5 on>, <F5 off>, <G#4 off>, <G#4 on>
+Most similar notes with <F#4 off>
+    <F#4 on>, <F#5 off>, <F#5 on>, <A4 on>, <A4 off>
+Most similar notes with <G4 off>
+    <G4 on>, <G5 on>, <G5 off>, <C5 off>, <C5 on>
+Most similar notes with <G#4 off>
+    <G#4 on>, <G#5 off>, <G#5 on>, <B4 off>, <F4 on>
+Most similar notes with <A4 off>
+    <A4 on>, <A5 on>, <A5 off>, <C5 off>, <C5 on>
+Most similar notes with <A#4 off>
+    <A#4 on>, <A#5 off>, <A#5 on>, <C#5 on>, <C#5 off>
+Most similar notes with <B4 off>
+    <B4 on>, <B5 off>, <B5 on>, <D5 off>, <D5 on>
+Most similar notes with <C5 off>
+    <C5 on>, <C6 off>, <C6 on>, <delay 0.0>, <velocity 64>
+Most similar notes with <C#5 off>
+    <C#5 on>, <C#6 on>, <C#6 off>, <C#4 off>, <E5 on>
+Most similar notes with <D5 off>
+    <D5 on>, <D6 off>, <D6 on>, <F5 off>, <F5 on>
+Most similar notes with <D#5 off>
+    <D#5 on>, <D#6 on>, <D#6 off>, <D#4 off>, <D#4 on>
+Most similar notes with <E5 off>
+    <E5 on>, <E6 off>, <E6 on>, <G5 off>, <delay 0.0>
+Most similar notes with <F5 off>
+    <F5 on>, <D5 off>, <D5 on>, <F4 off>, <F4 on>
+Most similar notes with <F#5 off>
+    <F#5 on>, <F#4 off>, <F#4 on>, <F#6 on>, <F#6 off>
+Most similar notes with <G5 off>
+    <G5 on>, <G4 off>, <G4 on>, <E5 off>, <E5 on>
+Most similar notes with <G#5 off>
+    <G#5 on>, <G#4 off>, <G#4 on>, <G#6 on>, <B5 off>
+Most similar notes with <A5 off>
+    <A5 on>, <A4 off>, <A4 on>, <velocity 64>, <C6 on>
+Most similar notes with <A#5 off>
+    <A#5 on>, <A#4 on>, <A#4 off>, <G5 off>, <G5 on>
+Most similar notes with <B5 off>
+    <B5 on>, <B4 off>, <B4 on>, <D6 off>, <D6 on>
+Most similar notes with <C6 off>
+    <C6 on>, <C5 off>, <C5 on>, <velocity 64>, <velocity 32>
+Most similar notes with <C#6 off>
+    <C#6 on>, <C#5 on>, <C#5 off>, <D#6 on>, <D#6 off>
+Most similar notes with <D6 off>
+    <D6 on>, <D5 on>, <D5 off>, <E6 off>, <F6 off>
+Most similar notes with <D#6 off>
+    <D#6 on>, <D#5 on>, <D#5 off>, <C#6 on>, <C#6 off>
+Most similar notes with <E6 off>
+    <E6 on>, <E5 on>, <E5 off>, <D6 on>, <D6 off>
+Most similar notes with <F6 off>
+    <F6 on>, <D6 on>, <D6 off>, <G6 off>, <G6 on>
+Most similar notes with <F#6 off>
+    <F#6 on>, <F#5 on>, <F#5 off>, <A6 on>, <A6 off>
+Most similar notes with <G6 off>
+    <G6 on>, <E6 on>, <E6 off>, <F6 on>, <G5 off>
+Most similar notes with <G#6 off>
+    <G#6 on>, <A#6 off>, <A#6 on>, <F6 on>, <F6 off>
+Most similar notes with <A6 off>
+    <A6 on>, <G6 on>, <G6 off>, <C7 on>, <B6 off>
+Most similar notes with <A#6 off>
+    <A#6 on>, <G#6 off>, <G#6 on>, <G6 on>, <G6 off>
+Most similar notes with <B6 off>
+    <B6 on>, <A6 on>, <A6 off>, <D7 off>, <D7 on>
+Most similar notes with <C7 off>
+    <C7 on>, <D7 off>, <A6 on>, <D7 on>, <A6 off>
+Most similar notes with <C#7 off>
+    <C#7 on>, <D#7 on>, <D#7 off>, <E7 off>, <E7 on>
+Most similar notes with <D7 off>
+    <D7 on>, <E7 off>, <E7 on>, <C7 on>, <C7 off>
+Most similar notes with <D#7 off>
+    <D#7 on>, <C#7 on>, <C#7 off>, <G#7 off>, <F#7 off>
+Most similar notes with <E7 off>
+    <E7 on>, <D7 off>, <D7 on>, <G7 on>, <G7 off>
+Most similar notes with <F7 off>
+    <F7 on>, <G7 off>, <G7 on>, <G#7 on>, <G#7 off>
+Most similar notes with <F#7 off>
+    <F#7 on>, <G#7 off>, <G#7 on>, <A7 on>, <A7 off>
+Most similar notes with <G7 off>
+    <G7 on>, <C8 off>, <A7 off>, <A7 on>, <C8 on>
+Most similar notes with <G#7 off>
+    <G#7 on>, <F#7 on>, <A#7 off>, <C#8 on>, <C#8 off>
+Most similar notes with <A7 off>
+    <A7 on>, <F8 on>, <D8 on>, <C8 off>, <F8 off>
+Most similar notes with <A#7 off>
+    <A#7 on>, <F8 on>, <F8 off>, <D8 on>, <D8 off>
+Most similar notes with <B7 off>
+    <F8 off>, <F8 on>, <D8 on>, <D8 off>, <B7 on>
+Most similar notes with <C8 off>
+    <F8 on>, <F8 off>, <D8 on>, <D8 off>, <E8 off>
+Most similar notes with <C#8 off>
+    <F8 on>, <F8 off>, <D8 off>, <D8 on>, <F#8 off>
+Most similar notes with <D8 off>
+    <F8 on>, <F8 off>, <F#8 off>, <F#8 on>, <D2 on>
+Most similar notes with <D#8 off>
+    <D#8 on>, <F8 off>, <F8 on>, <E8 off>, <E8 on>
+Most similar notes with <E8 off>
+    <F8 on>, <F8 off>, <F#8 on>, <E8 on>, <D2 on>
+Most similar notes with <F8 off>
+    <F8 on>, <F#8 on>, <delay 410.0>, <F#8 off>, <D2 on>
+Most similar notes with <F#8 off>
+    <F#8 on>, <delay 450.0>, <delay 470.0>, <delay 440.0>, <delay 410.0>
+Most similar notes with <G8 off>
+    <G#1 on>, <E9 on>, <F#9 off>, <G0 off>, <E1 on>
+Most similar notes with <G#8 off>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <D0 on>
+Most similar notes with <A8 off>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <E1 on>
+Most similar notes with <A#8 off>
+    <D10 on>, <G0 off>, <A#0 off>, <E0 on>, <G#0 on>
+Most similar notes with <B8 off>
+    <G0 off>, <D10 on>, <A#0 off>, <G#0 on>, <E0 on>
+Most similar notes with <C9 off>
+    <D10 on>, <G0 off>, <A#0 off>, <E0 on>, <E1 on>
+Most similar notes with <C#9 off>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <D9 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <D#9 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <E9 off>
+    <B9 off>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <F9 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <F#9 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <G9 off>
+    <B9 off>, <E0 on>, <G#0 on>, <D#1 on>, <D10 on>
+Most similar notes with <G#9 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <A9 off>
+    <B9 off>, <E0 on>, <G#0 on>, <G0 off>, <D10 on>
+Most similar notes with <A#9 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <B9 off>
+    <D0 on>, <E0 on>, <G0 off>, <D#1 on>, <D10 on>
+Most similar notes with <C10 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <C#10 off>
+    <B9 off>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <D10 off>
+    <D0 on>, <D10 off>, <E0 on>, <G0 off>, <D#1 on>
+Most similar notes with <D#10 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D#1 on>
+Most similar notes with <E10 off>
+    <D0 on>, <E0 on>, <G#0 on>, <G0 off>, <D#1 on>
+Most similar notes with <F10 off>
+    <D0 on>, <E0 on>, <G0 off>, <G#0 on>, <D10 on>
+Most similar notes with <F#10 off>
+    <D0 on>, <F#10 off>, <E0 on>, <G0 off>, <G#0 on>
+Most similar notes with <G10 off>
+    <delay 410.0>, <delay 430.0>, <delay 390.0>, <delay 440.0>, <delay 450.0>
+Most similar notes with <delay 0.0>
+    <delay 10.0>, <delay 20.0>, <velocity 32>, <velocity 64>, <delay 30.0>
+Most similar notes with <delay 10.0>
+    <delay 10.0>, <delay 0.0>, <velocity 32>, <velocity 64>, <delay 30.0>
+Most similar notes with <delay 20.0>
+    <delay 10.0>, <delay 0.0>, <velocity 32>, <velocity 64>, <delay 30.0>
+Most similar notes with <delay 30.0>
+    <delay 20.0>, <delay 0.0>, <delay 30.0>, <velocity 32>, <velocity 64>
+Most similar notes with <delay 40.0>
+    <delay 10.0>, <delay 0.0>, <delay 40.0>, <velocity 32>, <velocity 64>
+Most similar notes with <delay 50.0>
+    <delay 20.0>, <delay 30.0>, <delay 50.0>, <velocity 32>, <delay 0.0>
+Most similar notes with <delay 60.0>
+    <velocity 64>, <delay 30.0>, <delay 60.0>, <delay 40.0>, <delay 20.0>
+Most similar notes with <delay 70.0>
+    <delay 30.0>, <velocity 32>, <delay 70.0>, <velocity 64>, <delay 50.0>
+Most similar notes with <delay 80.0>
+    <delay 30.0>, <delay 40.0>, <velocity 32>, <delay 50.0>, <velocity 64>
+Most similar notes with <delay 90.0>
+    <delay 40.0>, <delay 30.0>, <delay 50.0>, <delay 60.0>, <delay 80.0>
+Most similar notes with <delay 100.0>
+    <delay 80.0>, <delay 90.0>, <delay 60.0>, <delay 50.0>, <delay 70.0>
+Most similar notes with <delay 110.0>
+    <delay 100.0>, <delay 90.0>, <delay 80.0>, <delay 60.0>, <delay 50.0>
+Most similar notes with <delay 120.0>
+    <delay 100.0>, <delay 110.0>, <delay 90.0>, <delay 130.0>, <delay 80.0>
+Most similar notes with <delay 130.0>
+    <delay 110.0>, <delay 120.0>, <delay 100.0>, <delay 90.0>, <delay 140.0>
+Most similar notes with <delay 140.0>
+    <delay 130.0>, <delay 120.0>, <delay 150.0>, <delay 110.0>, <delay 100.0>
+Most similar notes with <delay 150.0>
+    <delay 140.0>, <delay 170.0>, <delay 130.0>, <delay 160.0>, <G10 off>
+Most similar notes with <delay 160.0>
+    <delay 150.0>, <G10 off>, <delay 170.0>, <delay 180.0>, <delay 140.0>
+Most similar notes with <delay 170.0>
+    <G10 off>, <delay 320.0>, <delay 330.0>, <delay 410.0>, <delay 250.0>
+Most similar notes with <delay 180.0>
+    <delay 350.0>, <delay 430.0>, <G10 off>, <delay 410.0>, <delay 400.0>
+Most similar notes with <delay 190.0>
+    <delay 190.0>, <delay 370.0>, <delay 400.0>, <G10 off>, <delay 390.0>
+Most similar notes with <delay 200.0>
+    <delay 370.0>, <delay 390.0>, <delay 430.0>, <delay 400.0>, <delay 340.0>
+Most similar notes with <delay 210.0>
+    <delay 400.0>, <delay 390.0>, <delay 370.0>, <delay 350.0>, <delay 430.0>
+Most similar notes with <delay 220.0>
+    <delay 430.0>, <delay 400.0>, <delay 390.0>, <delay 370.0>, <delay 350.0>
+Most similar notes with <delay 230.0>
+    <delay 400.0>, <delay 430.0>, <delay 390.0>, <delay 370.0>, <delay 380.0>
+Most similar notes with <delay 240.0>
+    <delay 400.0>, <delay 390.0>, <delay 430.0>, <delay 450.0>, <delay 380.0>
+Most similar notes with <delay 250.0>
+    <delay 400.0>, <delay 430.0>, <delay 390.0>, <delay 450.0>, <delay 370.0>
+Most similar notes with <delay 260.0>
+    <delay 430.0>, <delay 390.0>, <delay 450.0>, <delay 400.0>, <delay 380.0>
+Most similar notes with <delay 270.0>
+    <delay 400.0>, <delay 390.0>, <delay 430.0>, <delay 450.0>, <delay 440.0>
+Most similar notes with <delay 280.0>
+    <delay 430.0>, <delay 440.0>, <delay 450.0>, <delay 400.0>, <delay 390.0>
+Most similar notes with <delay 290.0>
+    <delay 430.0>, <delay 390.0>, <delay 400.0>, <delay 450.0>, <delay 440.0>
+Most similar notes with <delay 300.0>
+    <delay 450.0>, <delay 390.0>, <delay 400.0>, <delay 430.0>, <delay 440.0>
+Most similar notes with <delay 310.0>
+    <delay 440.0>, <delay 450.0>, <delay 430.0>, <delay 390.0>, <delay 400.0>
+Most similar notes with <delay 320.0>
+    <delay 430.0>, <delay 440.0>, <delay 450.0>, <delay 400.0>, <delay 320.0>
+Most similar notes with <delay 330.0>
+    <delay 430.0>, <delay 450.0>, <delay 440.0>, <delay 390.0>, <delay 330.0>
+Most similar notes with <delay 340.0>
+    <delay 340.0>, <delay 430.0>, <delay 450.0>, <delay 440.0>, <delay 390.0>
+Most similar notes with <delay 350.0>
+    <delay 410.0>, <delay 450.0>, <delay 430.0>, <delay 440.0>, <delay 390.0>
+Most similar notes with <delay 360.0>
+    <delay 360.0>, <delay 430.0>, <delay 450.0>, <delay 440.0>, <delay 390.0>
+Most similar notes with <delay 370.0>
+    <delay 410.0>, <delay 450.0>, <delay 440.0>, <delay 430.0>, <delay 390.0>
+Most similar notes with <delay 380.0>
+    <delay 410.0>, <delay 450.0>, <delay 430.0>, <delay 440.0>, <delay 390.0>
+Most similar notes with <delay 390.0>
+    <delay 410.0>, <delay 430.0>, <delay 450.0>, <delay 440.0>, <delay 420.0>
+Most similar notes with <delay 400.0>
+    <delay 410.0>, <delay 450.0>, <delay 430.0>, <delay 440.0>, <delay 420.0>
+Most similar notes with <delay 410.0>
+    <delay 450.0>, <delay 440.0>, <delay 430.0>, <delay 470.0>, <delay 420.0>
+Most similar notes with <delay 420.0>
+    <delay 450.0>, <delay 440.0>, <delay 410.0>, <delay 430.0>, <delay 470.0>
+Most similar notes with <delay 430.0>
+    <delay 450.0>, <delay 410.0>, <delay 440.0>, <delay 470.0>, <delay 420.0>
+Most similar notes with <delay 440.0>
+    <delay 450.0>, <delay 410.0>, <delay 430.0>, <delay 470.0>, <delay 420.0>
+Most similar notes with <delay 450.0>
+    <delay 410.0>, <delay 440.0>, <delay 430.0>, <delay 470.0>, <delay 420.0>
+Most similar notes with <delay 460.0>
+    <delay 970.0>, <delay 990.0>, <delay 920.0>, <velocity 1>, <delay 930.0>
+Most similar notes with <delay 470.0>
+    <delay 450.0>, <delay 410.0>, <delay 440.0>, <delay 430.0>, <delay 460.0>
+Most similar notes with <delay 480.0>
+    <C1 on>, <E1 on>, <D10 off>, <F#0 on>, <B9 off>
+Most similar notes with <delay 490.0>
+    <G#1 on>, <delay 920.0>, <delay 970.0>, <delay 990.0>, <D10 off>
+Most similar notes with <delay 500.0>
+    <D1 off>, <D10 off>, <G#1 on>, <E1 on>, <A#0 off>
+Most similar notes with <delay 510.0>
+    <D0 on>, <A#0 off>, <G0 off>, <G#1 on>, <F#10 off>
+Most similar notes with <delay 520.0>
+    <D10 on>, <A#0 off>, <E0 on>, <D0 on>, <E1 on>
+Most similar notes with <delay 530.0>
+    <E0 on>, <G0 off>, <D10 on>, <G#0 on>, <D0 on>
+Most similar notes with <delay 540.0>
+    <D10 on>, <A#0 off>, <G0 off>, <G#0 on>, <E0 on>
+Most similar notes with <delay 550.0>
+    <D10 on>, <E0 on>, <G#0 on>, <G0 off>, <D0 on>
+Most similar notes with <delay 560.0>
+    <D10 on>, <D0 on>, <G#0 on>, <E0 on>, <G#1 on>
+Most similar notes with <delay 570.0>
+    <B9 off>, <A#0 off>, <E0 on>, <G0 off>, <G#0 on>
+Most similar notes with <delay 580.0>
+    <D10 on>, <A#0 off>, <G#0 on>, <G0 off>, <E0 on>
+Most similar notes with <delay 590.0>
+    <D10 on>, <G0 off>, <G#0 on>, <A#0 off>, <E0 on>
+Most similar notes with <delay 600.0>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <E1 on>
+Most similar notes with <delay 610.0>
+    <D10 on>, <E0 on>, <G0 off>, <G#0 on>, <D0 on>
+Most similar notes with <delay 620.0>
+    <B9 off>, <G0 off>, <G#0 on>, <A#0 off>, <D0 on>
+Most similar notes with <delay 630.0>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <E1 on>
+Most similar notes with <delay 640.0>
+    <D10 on>, <A#0 off>, <G0 off>, <E0 on>, <E1 on>
+Most similar notes with <delay 650.0>
+    <D10 on>, <A#0 off>, <G#0 on>, <E0 on>, <G0 off>
+Most similar notes with <delay 660.0>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <E0 on>
+Most similar notes with <delay 670.0>
+    <D10 on>, <G0 off>, <G#0 on>, <A#0 off>, <E1 on>
+Most similar notes with <delay 680.0>
+    <D10 on>, <G0 off>, <G#0 on>, <A#0 off>, <D0 on>
+Most similar notes with <delay 690.0>
+    <D10 on>, <G#0 on>, <G0 off>, <A#0 off>, <D0 on>
+Most similar notes with <delay 700.0>
+    <D10 on>, <G0 off>, <G#0 on>, <E1 on>, <E0 on>
+Most similar notes with <delay 710.0>
+    <D10 on>, <G0 off>, <A#0 off>, <E0 on>, <D0 on>
+Most similar notes with <delay 720.0>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <E1 on>
+Most similar notes with <delay 730.0>
+    <D10 on>, <A#0 off>, <G0 off>, <G#0 on>, <D0 on>
+Most similar notes with <delay 740.0>
+    <B9 off>, <G0 off>, <A#0 off>, <E1 on>, <E0 on>
+Most similar notes with <delay 750.0>
+    <D10 on>, <G0 off>, <A#0 off>, <D0 on>, <G#0 on>
+Most similar notes with <delay 760.0>
+    <D10 on>, <D0 on>, <G0 off>, <G#0 on>, <A#0 off>
+Most similar notes with <delay 770.0>
+    <D10 on>, <G0 off>, <D0 on>, <A#0 off>, <G#0 on>
+Most similar notes with <delay 780.0>
+    <B9 off>, <G0 off>, <G#0 on>, <A#0 off>, <E0 on>
+Most similar notes with <delay 790.0>
+    <D10 on>, <G0 off>, <A#0 off>, <G#0 on>, <E1 on>
+Most similar notes with <delay 800.0>
+    <D10 on>, <G0 off>, <D0 on>, <E0 on>, <A#0 off>
+Most similar notes with <delay 810.0>
+    <D10 on>, <G#0 on>, <G0 off>, <E0 on>, <A#0 off>
+Most similar notes with <delay 820.0>
+    <D10 on>, <G0 off>, <G#0 on>, <E0 on>, <A#0 off>
+Most similar notes with <delay 830.0>
+    <G0 off>, <D10 on>, <G#0 on>, <A#0 off>, <E0 on>
+Most similar notes with <delay 840.0>
+    <D10 on>, <G0 off>, <G#0 on>, <A#0 off>, <E1 on>
+Most similar notes with <delay 850.0>
+    <D10 on>, <G0 off>, <A#0 off>, <D0 on>, <G#0 on>
+Most similar notes with <delay 860.0>
+    <B9 off>, <G0 off>, <G#0 on>, <D0 on>, <E1 on>
+Most similar notes with <delay 870.0>
+    <B9 off>, <G0 off>, <D0 on>, <A#0 off>, <E1 on>
+Most similar notes with <delay 880.0>
+    <B9 off>, <A#0 off>, <G0 off>, <G#0 on>, <E1 on>
+Most similar notes with <delay 890.0>
+    <B9 off>, <G#0 on>, <G0 off>, <D0 on>, <A#0 off>
+Most similar notes with <delay 900.0>
+    <D10 on>, <G#0 on>, <G0 off>, <A#0 off>, <D0 on>
+Most similar notes with <delay 910.0>
+    <D10 on>, <G0 off>, <E1 on>, <G#0 on>, <D0 on>
+Most similar notes with <delay 920.0>
+    <D10 on>, <A#0 off>, <G0 off>, <G#0 on>, <D0 on>
+Most similar notes with <delay 930.0>
+    <D10 on>, <D0 on>, <G#0 on>, <E0 on>, <A#0 off>
+Most similar notes with <delay 940.0>
+    <D10 on>, <G0 off>, <G#0 on>, <D0 on>, <A#0 off>
+Most similar notes with <delay 950.0>
+    <B9 off>, <G0 off>, <D0 on>, <E1 on>, <G#0 on>
+Most similar notes with <delay 960.0>
+    <D10 on>, <G#0 on>, <A#0 off>, <G0 off>, <D0 on>
+Most similar notes with <delay 970.0>
+    <D10 on>, <G#0 on>, <G0 off>, <D0 on>, <E0 on>
+Most similar notes with <delay 980.0>
+    <D10 on>, <G#0 on>, <G0 off>, <D0 on>, <E1 on>
+Most similar notes with <delay 990.0>
+    <D10 on>, <A#0 off>, <G0 off>, <D0 on>, <G#0 on>
+Most similar notes with <velocity 1>
+    <D10 on>, <A#0 off>, <G0 off>, <G#0 on>, <D0 on>
+Most similar notes with <velocity 2>
+    <delay 410.0>, <delay 430.0>, <delay 450.0>, <delay 440.0>, <delay 400.0>
+Most similar notes with <velocity 4>
+    <delay 430.0>, <delay 390.0>, <delay 400.0>, <delay 450.0>, <F8 on>
+Most similar notes with <velocity 8>
+    <delay 410.0>, <delay 380.0>, <delay 340.0>, <C#2 on>, <delay 400.0>
+Most similar notes with <velocity 16>
+    <delay 20.0>, <delay 10.0>, <delay 0.0>, <delay 30.0>, <delay 40.0>
+Most similar notes with <velocity 32>
+    <delay 10.0>, <velocity 32>, <delay 20.0>, <velocity 64>, <delay 30.0>
+Most similar notes with <velocity 64>
+    <velocity 64>, <delay 10.0>, <velocity 32>, <delay 20.0>, <delay 30.0>

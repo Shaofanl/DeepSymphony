@@ -2,6 +2,7 @@
 # All In One encoder
 ########################################################
 from .CoderBase import CoderBase
+from ..utils.constants import get_note_name
 import numpy as np
 from mido import Message
 
@@ -15,6 +16,20 @@ class AllInOneCoder(CoderBase):
 
     def __init__(self, return_indices=False):
         self.return_indices = return_indices
+
+    def code_to_name(self, ind):
+        assert 0 <= ind <= self.EVENT_LEN
+
+        if ind < self.EVENT_RANGE[0]:
+            return '<'+get_note_name(ind)+' on>'
+        elif ind < sum(self.EVENT_RANGE[:2]):
+            return '<'+get_note_name(ind-self.EVENT_RANGE[0])+' off>'
+        elif ind < sum(self.EVENT_RANGE[:3]):
+            T = (ind-sum(self.EVENT_RANGE[:2])) * 10.
+            return '<delay {}>'.format(T)
+        elif ind < sum(self.EVENT_RANGE[:4]):
+            V = 2**(ind-sum(self.EVENT_RANGE[:3]))
+            return '<velocity {}>'.format(V)
 
     def event_to_code(self, event, prefix=0):
         event = event + sum(self.EVENT_RANGE[:prefix])

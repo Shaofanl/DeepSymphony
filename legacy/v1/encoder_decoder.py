@@ -13,7 +13,6 @@ class EncoderBase(object):
     def encode(self, seq, **kwargs):
         raise NotImplemented
 
-    @abc.abstractmethod
     def __call__(self, seq, **inputs):
         return self.encode(seq, **inputs)
 

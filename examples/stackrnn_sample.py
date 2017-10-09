@@ -1,9 +1,9 @@
 import numpy as np
 from keras.utils.np_utils import to_categorical
 
-from DS.coders import AllInOneCoder
-from DS.models import StackedRNN
-from DS.utils import Song
+from DeepSymphony.coders import AllInOneCoder
+from DeepSymphony.models import StackedRNN
+from DeepSymphony.utils import Song
 
 
 if __name__ == '__main__':
@@ -38,12 +38,14 @@ if __name__ == '__main__':
                        output_dim=DIM,
                        cells=[512, 512, 512])
     model.build()
-    model.train(data_generator(),
-                steps_per_epoch=5,
-                epochs=1,
-                save_path='/tmp/tmp.h5')
+#   model.train(data_generator(),
+#               steps_per_epoch=5,
+#               epochs=1,
+#               save_path='/tmp/tmp.h5')
 
-    res = model.generate('/tmp/tmp.h5')
+    res = model.generate('temp/simple_rnn.h5',
+                         seed=32,
+                         length=1000)
 
     mid = Song()
     track = mid.add_track()

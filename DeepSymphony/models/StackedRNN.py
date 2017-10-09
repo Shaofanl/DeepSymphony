@@ -1,6 +1,6 @@
 from .BaseModel import BaseModel
 from keras.layers import LSTM, TimeDistributed,\
-        Dense, Activation, Input
+        Dense, Activation, Input, Embedding
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
@@ -13,30 +13,46 @@ class StackedRNN(BaseModel):
                  input_dim,
                  output_dim,
                  cells=[512, 512, 512],
-                 block=LSTM):
+                 block=LSTM,
+                 embedding=None, embedding_w=None):
         self.block = block
         self.input_dim = input_dim
         self.timespan = timespan
         self.output_dim = output_dim
         self.cells = cells
+        self.embedding = embedding
+        self.embedding_w = embedding_w
 
-    def build(self, generator=False, **kwargs):
+    def build(self,
+              generator=False,
+              **kwargs):
         if generator:
-            x = input = Input(batch_shape=(1, 1, self.input_dim))
+            x = input = Input(batch_shape=(1, 1) if self.embedding else
+                              (1, 1, self.input_dim))
         else:
-            x = input = Input((self.timespan, self.input_dim))
+            x = input = Input((self.timespan,) if self.embedding else
+                              (self.timespan, self.input_dim))
+
+        if self.embedding:
+            x = self.embedding(x)
+            if self.embedding_w:
+                self.embedding.set_weights(self.embedding_w)
 
         for cell in self.cells:
             x = self.block(cell,
                            stateful=generator,
                            return_sequences=True,
                            implementation=2)(x)
-        x = TimeDistributed(Dense(self.output_dim))(x)
+        score = x = TimeDistributed(Dense(self.output_dim))(x)
         x = TimeDistributed(Activation('softmax'))(x)
 
-        model = Model(input, x)
-        if not generator:
+        if generator:
+            model = Model(input, score)
+            self.generator = model
+        else:
+            model = Model(input, x)
             self.model = model
+        model.summary()
         return model
 
     def train(self,
@@ -77,15 +93,19 @@ class StackedRNN(BaseModel):
         if weight_path is None:
             gen.set_weights(self.model.get_weights())
         else:
+            print 'loading weights from {}'.format(weight_path)
             gen.load_weights(weight_path)
 
-        np.random.seed(seed)
+        rng = np.random.RandomState(seed)
 
         if prefix:
             for note in prefix:
                 res = gen.predict(np.expand_dims(note, 0))
         else:
-            res = gen.predict(np.zeros(gen.input_shape))
+            if self.embedding:
+                res = gen.predict(rng.randint(self.input_dim, size=(1, 1)))
+            else:
+                res = gen.predict(np.zeros(gen.input_shape))
 
         notes = []
         for _ in range(length):
@@ -93,10 +113,13 @@ class StackedRNN(BaseModel):
             note = np.exp(note/temperature)
             note /= note.sum()
 
-            ind = np.random.choice(len(note), p=note)
+            ind = rng.choice(len(note), p=note)
             note = np.zeros_like(note)
             note[ind] = 1
-            res = gen.predict(np.array([[note]]))
+            if self.embedding:
+                res = gen.predict(np.array([[note.argmax()]]))
+            else:
+                res = gen.predict(np.array([[note]]))
 
             print '\n'.join(
                 map(lambda x: ''.join(['x' if n > 0 else '_' for n in x]),
