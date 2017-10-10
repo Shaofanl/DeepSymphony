@@ -1,6 +1,6 @@
 from .BaseModel import BaseModel
 from keras.layers import LSTM, TimeDistributed,\
-        Dense, Activation, Input, Embedding
+        Dense, Activation, Input
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
@@ -55,6 +55,9 @@ class StackedRNN(BaseModel):
         model.summary()
         return model
 
+    def build_generator(self, **kwargs):
+        return self.build(generator=True, **kwargs)
+
     def train(self,
               data_generator,
               lr=1e-4, steps_per_epoch=20, epochs=500,
@@ -87,13 +90,19 @@ class StackedRNN(BaseModel):
                  weight_path=None,
                  prefix=[], seed=32,
                  temperature=1.0, length=1000,
-                 max_sustain=2.0):
-        gen = self.build(generator=True)
+                 max_sustain=2.0,
+                 verbose=1,
+                 callbacks=[]):
+        if hasattr(self, 'generator'):
+            gen = self.generator
+        else:
+            gen = self.build_generator()
 
         if weight_path is None:
             gen.set_weights(self.model.get_weights())
         else:
-            print 'loading weights from {}'.format(weight_path)
+            if verbose:
+                print 'loading weights from {}'.format(weight_path)
             gen.load_weights(weight_path)
 
         rng = np.random.RandomState(seed)
@@ -121,14 +130,21 @@ class StackedRNN(BaseModel):
             else:
                 res = gen.predict(np.array([[note]]))
 
-            print '\n'.join(
-                map(lambda x: ''.join(['x' if n > 0 else '_' for n in x]),
-                    [note[:128], note[128:256], note[256:356], note[356:]])
-            )
+            if verbose:
+                print '\n'.join(
+                    map(lambda x: ''.join(['x' if n > 0 else '_' for n in x]),
+                        [note[:128], note[128:256], note[256:356], note[356:]])
+                )
 
             notes.append(note)
 
-        # handle
+            for callback in callbacks:
+                if hasattr(callback, '__call__'):
+                    callback(self.generator, note)
+                elif hasattr(callback, '_generator_callback'):
+                    callback._generator_callback(self.generator, note)
+
+        # post process
         last_appear = np.ones((128,)) * (-1)
         post_process = []
         current_t = 0.

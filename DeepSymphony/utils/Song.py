@@ -3,6 +3,7 @@ import numpy as np
 import os
 from tqdm import tqdm
 from pathos.multiprocessing import ProcessingPool as Pool
+from time import sleep
 
 
 class Song(object):
@@ -16,6 +17,11 @@ class Song(object):
 
     def save_as(self, filename):
         self.midi.save(filename)
+
+    def playback(self, callbacks=[]):
+        for msg in self.midi:
+            sleep(msg.time)
+            yield msg
 
     # ====================================
     #       Visualization functions

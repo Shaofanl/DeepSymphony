@@ -1,3 +1,9 @@
-# deprecated
+# system
+libasound2-dev
+libjack-dev
+
+# python
 mido==1.2.8
+rtmidi (this one https://pypi.python.org/pypi/python-rtmidi/)
 numpy==1.13.1
+

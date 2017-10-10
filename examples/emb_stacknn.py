@@ -48,7 +48,9 @@ if __name__ == '__main__':
 #               epochs=200,
 #               save_path='temp/emb_stackrnn.h5')
 
-    res = model.generate('temp/emb_stackrnn.h5')
+    res = model.generate('temp/emb_stackrnn.h5',
+                         seed=64,
+                         length=5000)
     mid = Song()
     track = mid.add_track()
     for msgi in AllInOneCoder().decode(res):
