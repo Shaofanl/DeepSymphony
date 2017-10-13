@@ -57,7 +57,7 @@ if __name__ == '__main__':
     #                         encoder=AllInOneEncoder())
     # data = np.load('./datasets/e-comp-allinone-partial.npz')['data']
     data = np.load('./datasets/e-comp-allinone-partial.npz')['data']
-    data = np.array([datai[:,:360] for datai in data]) 
+    data = np.array([datai[:,:360] for datai in data])
     print data[0].shape
     note_dim = data[0].shape[-1]
 

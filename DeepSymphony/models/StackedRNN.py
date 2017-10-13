@@ -13,15 +13,16 @@ class StackedRNN(BaseModel):
                  input_dim,
                  output_dim,
                  cells=[512, 512, 512],
-                 block=LSTM,
+                 block=LSTM, block_kwargs={},
                  embedding=None, embedding_w=None):
-        self.block = block
         self.input_dim = input_dim
         self.timespan = timespan
         self.output_dim = output_dim
         self.cells = cells
         self.embedding = embedding
         self.embedding_w = embedding_w
+        self.block = block
+        self.block_kwargs = block_kwargs
 
     def build(self,
               generator=False,
@@ -42,7 +43,8 @@ class StackedRNN(BaseModel):
             x = self.block(cell,
                            stateful=generator,
                            return_sequences=True,
-                           implementation=2)(x)
+                           implementation=2,
+                           **self.block_kwargs)(x)
         score = x = TimeDistributed(Dense(self.output_dim))(x)
         x = TimeDistributed(Activation('softmax'))(x)
 

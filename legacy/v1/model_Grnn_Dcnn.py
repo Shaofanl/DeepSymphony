@@ -22,6 +22,7 @@ from encoder_decoder import AllInOneEncoder
 from model_Gcnn_Dcnn import cnn_dis
 from model_Grnn_Drnn import rnn_dis
 from keras.initializers import RandomNormal
+from model_Grnn_Drnn import rnn_gen
 
 import argparse
 parser = argparse.ArgumentParser(description='GAN-RNN Model')
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     # data preparation
     # data = Song.load_from_dir("./datasets/easymusicnotes/")
     # data = Song.load_from_dir("./datasets/e-comp/", encoder=AllInOneEncoder())
-    data = np.load('./datasets/e-comp-allinone-partial.npz')['data']
+    data = np.load('../../datasets/e-comp-allinone-partial.npz')['data']
     note_dim = data[0].shape[-1]
 
     def data_generator(bs):

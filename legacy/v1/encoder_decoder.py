@@ -9,18 +9,15 @@ class EncoderBase(object):
     def __init__(self):
         raise NotImplemented
 
-    @abc.abstractmethod
     def encode(self, seq, **kwargs):
         raise NotImplemented
 
     def __call__(self, seq, **inputs):
         return self.encode(seq, **inputs)
 
-    @abc.abstractmethod
     def decode(self, seq, **kwargs):
         raise NotImplemented
 
-    @abc.abstractmethod
     def event_to_code(self, event):
         raise NotImplemented
 
@@ -41,7 +38,7 @@ class OneHotEncoder(EncoderBase):
 def get_absolute_time(
         source,
         filter_f=lambda x: True,
-        unit='second',
+        unit='beat',
         quantize=4):
     """
         Translate a relative time-format into an
@@ -91,7 +88,7 @@ def get_absolute_time(
     return messages, timestamps
 
 
-def get_hots(msgs, times, hots=128, field='note', resolution=1.):
+def get_hots(msgs, times, hots=128, field='note', resolution=0.25):
     """
         Translate a (msgs, times) pair into a T*hots matrix
 
@@ -118,9 +115,10 @@ def get_hots(msgs, times, hots=128, field='note', resolution=1.):
         while msg_ind < len(msgs) and T >= times[msg_ind]:
             msg = msgs[msg_ind]
             if field == 'note':
-                if msg.type == 'note_off' or msg.velocity == 0:
+                if msg.type == 'note_off' or\
+                   (hasattr(msg, 'velocity') and msg.velocity == 0):
                     res[res_ind, msg.__dict__[field]] = 0.
-                else:
+                elif msg.type == 'note_on':
                     res[res_ind, msg.__dict__[field]] = 1.
             else:
                 raise NotImplemented

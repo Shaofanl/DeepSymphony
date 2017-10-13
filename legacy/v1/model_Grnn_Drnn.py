@@ -16,19 +16,21 @@ from keras.layers import Conv2D, Dense, Activation, \
     UpSampling2D, Conv2DTranspose, LeakyReLU, \
     Flatten, LSTM, Dropout, TimeDistributed
 from keras.models import Model, Sequential
-from keras.optimizers import Adam
-from encoder_decoder import AllInOneEncoder
+from keras.optimizers import Adam, SGD
+from encoder_decoder import AllInOneEncoder, OneHotEncoder
+import keras.backend as K
+from keras.utils.np_utils import to_categorical
 
 import argparse
 parser = argparse.ArgumentParser(description='GAN-RNN Model')
-parser.add_argument('--activation', type=str, default='softmax',
+parser.add_argument('--activation', type=str, default='sigmoid',
                     help='define activation and normalization range')
 parser.add_argument('--feed', type=str, default='first',
                     help='feed code only in the first place or all]')
 
 parser.add_argument('--code_dim', type=int, default=200)
 # parser.add_argument('--note_dim', type=int, default=128)
-parser.add_argument('--seq_len', type=int, default=100)
+parser.add_argument('--seq_len', type=int, default=96)
 parser.add_argument('--nbatch', type=int, default=32)
 parser.add_argument('--niter', type=int, default=1000)
 
@@ -103,10 +105,12 @@ if __name__ == '__main__':
     os.mkdir(vis_dir)
 
     # data preparation
-# data = Song.load_from_dir("./datasets/easymusicnotes/")
+    data = Song.load_from_dir("../../datasets/easymusicnotes/",
+                              encoder=OneHotEncoder())
 # data = Song.load_from_dir("./datasets/e-comp/", encoder=AllInOneEncoder())
-    data = np.load('./datasets/e-comp-allinone.npz')['data']
+    # data = np.load('../../datasets/e-comp-allinone.npz')['data']
     note_dim = data[0].shape[-1]
+    print min(map(lambda x: x.shape[0], data))
 
     def data_generator(bs):
         indices = np.random.randint(data.shape[0], size=(bs,))
@@ -134,8 +138,8 @@ if __name__ == '__main__':
     # component definition
     gen = rnn_gen(coding_shape=(seq_len, code_dim),
                   seq_shape=(seq_len, note_dim),
-                  lstm=[512, 512, 512],
-                  fc=[note_dim])
+                  lstm=[512, 512, note_dim],
+                  fc=[])  # note_dim])
     gen.summary()
 
     dis = rnn_dis(seq_shape=(seq_len, note_dim),

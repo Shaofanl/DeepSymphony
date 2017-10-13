@@ -4,6 +4,7 @@ from keras.utils.np_utils import to_categorical
 from DeepSymphony.coders import AllInOneCoder
 from DeepSymphony.models import StackedRNN
 from DeepSymphony.utils import Song
+from keras.regularizers import l1, l2
 
 
 if __name__ == '__main__':
@@ -36,14 +37,17 @@ if __name__ == '__main__':
     model = StackedRNN(timespan=LEN,
                        input_dim=DIM,
                        output_dim=DIM,
-                       cells=[512, 512, 512])
+                       cells=[512, 512, 512],
+                       block_kwargs={'activity_regularizer': l1(1e-4)})
     model.build()
-#   model.train(data_generator(),
-#               steps_per_epoch=5,
-#               epochs=1,
-#               save_path='/tmp/tmp.h5')
+    model.model.load_weights('temp/stackedrnn_act_l1.h5')
+    model.train(data_generator(),
+                lr=1e-4,
+                steps_per_epoch=30,
+                epochs=100,
+                save_path='temp/stackedrnn_act_l1.h5')
 
-    model.build_generator('temp/simple_rnn.h5')
+    model.build_generator('temp/stackedrnn_act_l1.h5')
     res = model.generate(seed=32,
                          length=1000)
 
