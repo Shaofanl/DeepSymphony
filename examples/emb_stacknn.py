@@ -1,5 +1,4 @@
 import numpy as np
-from keras.utils.np_utils import to_categorical
 from keras.layers import Embedding
 
 from DeepSymphony.coders import AllInOneCoder
@@ -42,11 +41,11 @@ if __name__ == '__main__':
     model.build()
     model.model.load_weights('temp/emb_stackrnn.h5')
 
-#   model.train(data_generator(),
-#               lr=1e-3,
-#               steps_per_epoch=20,
-#               epochs=200,
-#               save_path='temp/emb_stackrnn.h5')
+    model.train(data_generator(),
+                lr=1e-5,
+                steps_per_epoch=20,
+                epochs=200,
+                save_path='temp/emb_stackrnn.h5')
 
     res = model.generate('temp/emb_stackrnn.h5',
                          seed=64,

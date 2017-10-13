@@ -43,8 +43,8 @@ if __name__ == '__main__':
 #               epochs=1,
 #               save_path='/tmp/tmp.h5')
 
-    res = model.generate('temp/simple_rnn.h5',
-                         seed=32,
+    model.build_generator('temp/simple_rnn.h5')
+    res = model.generate(seed=32,
                          length=1000)
 
     mid = Song()

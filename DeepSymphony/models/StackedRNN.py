@@ -55,8 +55,16 @@ class StackedRNN(BaseModel):
         model.summary()
         return model
 
-    def build_generator(self, **kwargs):
-        return self.build(generator=True, **kwargs)
+    def build_generator(self,
+                        weight_path=None,
+                        **kwargs):
+        gen = self.build(generator=True, **kwargs)
+        if weight_path is None:
+            gen.set_weights(self.model.get_weights())
+        else:
+            print 'loading weights from {}'.format(weight_path)
+            gen.load_weights(weight_path)
+        return gen
 
     def train(self,
               data_generator,
@@ -86,27 +94,15 @@ class StackedRNN(BaseModel):
                                  epochs=epochs,
                                  callbacks=callbacks)
 
-    def generate(self,
-                 weight_path=None,
-                 prefix=[], seed=32,
-                 temperature=1.0, length=1000,
-                 max_sustain=2.0,
-                 verbose=1,
-                 callbacks=[]):
-        if hasattr(self, 'generator'):
-            gen = self.generator
-        else:
-            gen = self.build_generator()
-
-        if weight_path is None:
-            gen.set_weights(self.model.get_weights())
-        else:
-            if verbose:
-                print 'loading weights from {}'.format(weight_path)
-            gen.load_weights(weight_path)
-
-        rng = np.random.RandomState(seed)
-
+    def _generate(self,
+                  gen,
+                  prefix,
+                  rng,
+                  temperature,
+                  length):
+        '''
+            use to avoid blocking in GTK
+        '''
         if prefix:
             for note in prefix:
                 res = gen.predict(np.expand_dims(note, 0))
@@ -116,8 +112,9 @@ class StackedRNN(BaseModel):
             else:
                 res = gen.predict(np.zeros(gen.input_shape))
 
-        notes = []
-        for _ in range(length):
+        iteration = 0
+        while iteration < length:
+            iteration += 1
             note = res[0][-1]
             note = np.exp(note/temperature)
             note /= note.sum()
@@ -129,14 +126,34 @@ class StackedRNN(BaseModel):
                 res = gen.predict(np.array([[note.argmax()]]))
             else:
                 res = gen.predict(np.array([[note]]))
+            yield note
 
+    def generate(self,
+                 prefix=[], seed=32,
+                 temperature=1.0, length=1000,
+                 max_sustain=2.0,
+                 verbose=1,
+                 callbacks=[], return_yield=False):
+        assert hasattr(self, 'generator'),\
+            "Please call build_generator() first"
+        gen = self.generator
+
+        rng = np.random.RandomState(seed)
+        yielding = self._generate(gen=gen,
+                                  rng=rng,
+                                  prefix=prefix,
+                                  length=length,
+                                  temperature=temperature)
+        if return_yield:
+            return yielding
+        notes = []
+        for note in yielding:
+            notes.append(note)
             if verbose:
                 print '\n'.join(
                     map(lambda x: ''.join(['x' if n > 0 else '_' for n in x]),
                         [note[:128], note[128:256], note[256:356], note[356:]])
                 )
-
-            notes.append(note)
 
             for callback in callbacks:
                 if hasattr(callback, '__call__'):

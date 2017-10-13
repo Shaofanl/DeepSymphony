@@ -1,9 +1,9 @@
 from DeepSymphony.models import StackedRNN
 import keras.backend as K
 from keras.layers import LSTM
-
-from gi.repository import Gtk, GObject
 import numpy as np
+
+from gi.repository import Gtk, Gdk  # GLib
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_gtk3cairo import \
@@ -54,22 +54,23 @@ class VisualizeWindow(Gtk.Window):
         self.canvas.append(canvas)
         self.keyboard = np.zeros((1, 128))
 
-        btn_start = Gtk.Button(label="Block and Generate")
-        btn_start.connect("clicked", self.on_click)
+        btn_reset = Gtk.Button(label="Reset")
+        btn_reset.connect("clicked", self.on_click_reset)
+        btn_next = Gtk.Button(label="Next")
+        btn_next.connect("clicked", self.on_click_next)
         hb = Gtk.HeaderBar(title="generate and visualize")
-        hb.pack_end(btn_start)
+        hb.pack_end(btn_reset)
+        hb.pack_end(btn_next)
         self.set_titlebar(hb)
 
         # testing
         # self.timeout_id = GObject.timeout_add(10, self.on_timeout, None)
+        self.connect("key-press-event", self.on_key_press)
+        self.on_click_reset(self)
 
-    def on_click(self, widget):
-        kwargs = {'weight_path': 'temp/simple_rnn.h5',
-                  'seed': 20,
-                  'verbose': 0,
-                  'length': 1000,
-                  'callbacks': [self]}
-        self.model.generate(**kwargs)
+    def on_key_press(self, widget, event):
+        if Gdk.keyval_name(event.keyval) == 'Right':
+            self.on_click_next(widget)
 
     def on_timeout(self, user_data):
         # print '>>>', self.keyboard.sum()
@@ -90,7 +91,16 @@ class VisualizeWindow(Gtk.Window):
         sw.add_with_viewport(canvas)
         return sw, fig, ax, imshow, canvas
 
-    def _generator_callback(self, generator, note):
+    def on_click_reset(self, widget):
+        kwargs = {'seed': 32,
+                  'verbose': 0,
+                  'length': np.inf,
+                  'return_yield': True}
+        self.keyboard = np.zeros((1, 128))
+        self.yielding = self.model.generate(**kwargs)
+
+    def on_click_next(self, widget):
+        note = self.yielding.next()
         for ind, layer in enumerate(self.lstm_layers):
             cell = layer.states[1].eval(session=K.get_session())
             self.imshows[ind].set_data(cell.reshape(16, 32))
@@ -110,7 +120,7 @@ if __name__ == '__main__':
                        input_dim=DIM,
                        output_dim=DIM,
                        cells=[512, 512, 512])
-    generator = model.build_generator()
+    generator = model.build_generator('temp/simple_rnn.h5')
     lstm_layers = []
     for layer in generator.layers:
         if isinstance(layer, LSTM):
