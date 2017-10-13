@@ -65,7 +65,7 @@ class VisualizeWindow(Gtk.Window):
 
     def on_click(self, widget):
         kwargs = {'weight_path': 'temp/simple_rnn.h5',
-                  'seed': 32,
+                  'seed': 20,
                   'verbose': 0,
                   'length': 1000,
                   'callbacks': [self]}
