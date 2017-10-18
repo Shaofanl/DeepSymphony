@@ -56,12 +56,9 @@ class Song(object):
             data = np.array(pool.map(handle, filelist))
         else:
             for filename in tqdm(filelist):
-                try:
-                    midi = Song(filename)
-                    hots = encoder(midi.midi)
-                    data.append(hots)
-                except:
-                    print "error with {}".format(filename)
+                midi = Song(filename)
+                hots = encoder.encode(midi.midi)
+                data.append(hots)
             data = np.array(data)
         return data
 

@@ -1,4 +1,5 @@
-NOTE_NUMBER = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+NOTE_NUMBER = ['C_', 'C#', 'D_', 'D#', 'E_',
+               'F_', 'F#', 'G_', 'G#', 'A_', 'A#', 'B_']
 NOTE_COUNT = len(NOTE_NUMBER)
 OCTAVE_COUNT = 10
 

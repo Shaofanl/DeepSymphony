@@ -4,6 +4,7 @@ from keras.layers import LSTM, TimeDistributed,\
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
+from keras.backend import get_session
 import numpy as np
 
 
@@ -68,21 +69,32 @@ class StackedRNN(BaseModel):
             gen.load_weights(weight_path)
         return gen
 
+    def reset_generator(self):
+        sess = get_session()
+        for layer in self.generator.layers:
+            if hasattr(layer, 'states'):
+                for state in layer.states:
+                    zero = np.zeros(state.shape.as_list())
+                    sess.run(state.assign(zero))
+
     def train(self,
               data_generator,
-              lr=1e-4, steps_per_epoch=20, epochs=500,
+              opt=1e-4, steps_per_epoch=20, epochs=500,
               save_path='',):
         if not hasattr(self, 'model'):
             self.build()
 
         x, y = data_generator.next()
 
+        if isinstance(opt, float):
+            opt = Adam(opt)
+
         if y.shape[-1] == 1:
             self.model.compile(loss='sparse_categorical_crossentropy',
-                               optimizer=Adam(lr))
+                               optimizer=opt)
         else:
             self.model.compile(loss='categorical_crossentropy',
-                               optimizer=Adam(lr))
+                               optimizer=opt)
 
         callbacks = []
         if save_path:
@@ -97,6 +109,7 @@ class StackedRNN(BaseModel):
                                  callbacks=callbacks)
 
     def _generate(self,
+                  addition,
                   gen,
                   prefix,
                   rng,
@@ -105,9 +118,16 @@ class StackedRNN(BaseModel):
         '''
             use to avoid blocking in GTK
         '''
-        if prefix:
+        if len(prefix) > 0:
             for note in prefix:
-                res = gen.predict(np.expand_dims(note, 0))
+                if len(self.generator.input_shape) == 2:
+                    # TODO: embedding is currently not compatible with
+                    # additional bits
+                    res = gen.predict(np.array([note]))
+                else:
+                    if addition is not None:
+                        note = np.hstack([note, addition])
+                    res = gen.predict(np.array([[note]]))
         else:
             if self.embedding:
                 res = gen.predict(rng.randint(self.input_dim, size=(1, 1)))
@@ -124,6 +144,12 @@ class StackedRNN(BaseModel):
             ind = rng.choice(len(note), p=note)
             note = np.zeros_like(note)
             note[ind] = 1
+
+            # conditional bits
+            if addition is not None:
+                note = np.hstack([note, addition])
+
+            # recursive
             if self.embedding:
                 res = gen.predict(np.array([[note.argmax()]]))
             else:
@@ -131,9 +157,9 @@ class StackedRNN(BaseModel):
             yield note
 
     def generate(self,
+                 addition=None,
                  prefix=[], seed=32,
                  temperature=1.0, length=1000,
-                 max_sustain=2.0,
                  verbose=1,
                  callbacks=[], return_yield=False):
         assert hasattr(self, 'generator'),\
@@ -141,7 +167,8 @@ class StackedRNN(BaseModel):
         gen = self.generator
 
         rng = np.random.RandomState(seed)
-        yielding = self._generate(gen=gen,
+        yielding = self._generate(addition=addition,
+                                  gen=gen,
                                   rng=rng,
                                   prefix=prefix,
                                   length=length,
@@ -162,29 +189,4 @@ class StackedRNN(BaseModel):
                     callback(self.generator, note)
                 elif hasattr(callback, '_generator_callback'):
                     callback._generator_callback(self.generator, note)
-
-        # post process
-        last_appear = np.ones((128,)) * (-1)
-        post_process = []
-        current_t = 0.
-        for note in notes:
-            post_process.append(note)
-            note = note.argmax()
-            # print note
-            if note < 128:
-                if last_appear[note] == -1:
-                    last_appear[note] = current_t
-            elif note < 256:
-                last_appear[note-128] = -1
-            elif note < 356:
-                current_t += (note-256)*0.1
-
-            for key in range(128):
-                if last_appear[key] > 0 and \
-                   current_t - last_appear[key] > max_sustain:
-                    # print('force disable {}'.format(key))
-                    stop = np.zeros((363,))
-                    stop[key+128] = 1.
-                    last_appear[key] = -1
-                    post_process.append(stop)
-        return post_process
+        return np.array(notes)

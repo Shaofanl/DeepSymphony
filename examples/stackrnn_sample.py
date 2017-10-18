@@ -13,9 +13,8 @@ if __name__ == '__main__':
 
     data = np.load('./datasets/e-comp-allinone.npz')['data']
 
-    # sample training data
     def data_generator():
-        batch_size = 32
+        batch_size = 16
         while True:
             x = []
             y = []
@@ -37,19 +36,20 @@ if __name__ == '__main__':
     model = StackedRNN(timespan=LEN,
                        input_dim=DIM,
                        output_dim=DIM,
-                       cells=[512, 512, 512],
-                       block_kwargs={'activity_regularizer': l1(1e-4)})
+                       cells=[512, 512, 512],)
+    #                  block_kwargs={'kernel_regularizer': l2(1e-5)})
     model.build()
-    model.model.load_weights('temp/stackedrnn_act_l1.h5')
-    model.train(data_generator(),
-                lr=1e-4,
-                steps_per_epoch=30,
-                epochs=100,
-                save_path='temp/stackedrnn_act_l1.h5')
+#   model.model.load_weights('temp/stackedrnn_kernel_l2.h5')
+#   model.model.load_weights('temp/simple_rnn.h5')
+#   model.train(data_generator(),
+#               opt=1e-5,
+#               steps_per_epoch=30,
+#               epochs=100,
+#               save_path='temp/simple_rnn.h5')
 
-    model.build_generator('temp/stackedrnn_act_l1.h5')
+    model.build_generator('temp/e-comp_simple_rnn.h5')
     res = model.generate(seed=32,
-                         length=1000)
+                         length=2000)
 
     mid = Song()
     track = mid.add_track()

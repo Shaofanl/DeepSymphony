@@ -6,3 +6,4 @@ datasets/
 *.swp
 *.pyc
 *.mp3
+legacy/v1/temp/*

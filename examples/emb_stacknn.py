@@ -42,7 +42,7 @@ if __name__ == '__main__':
     model.model.load_weights('temp/emb_stackrnn.h5')
 
     model.train(data_generator(),
-                lr=1e-5,
+                opt=1e-5,
                 steps_per_epoch=20,
                 epochs=200,
                 save_path='temp/emb_stackrnn.h5')

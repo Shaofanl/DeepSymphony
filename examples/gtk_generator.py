@@ -105,7 +105,10 @@ class VisualizeWindow(Gtk.Window):
             cell = layer.states[1].eval(session=K.get_session())
             self.imshows[ind].set_data(cell.reshape(16, 32))
             self.canvas[ind].draw()
+            print '| Layer[{}]:'.format(ind), cell.max(), cell.min(),
+        print
 
+        # self.keyboard = self.keyboard*0.9
         note = note.argmax()
         if note <= 127:
             self.keyboard[0, note] = 1
@@ -120,7 +123,9 @@ if __name__ == '__main__':
                        input_dim=DIM,
                        output_dim=DIM,
                        cells=[512, 512, 512])
-    generator = model.build_generator('temp/simple_rnn.h5')
+    model.build()
+    # generator = model.build_generator('temp/simple_rnn.h5')
+    generator = model.build_generator('temp/stackedrnn_act_l1.h5')
     lstm_layers = []
     for layer in generator.layers:
         if isinstance(layer, LSTM):

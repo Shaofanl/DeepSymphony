@@ -73,7 +73,33 @@ class AllInOneCoder(CoderBase):
                 codes.append(self.event_to_code(msg.note))
         return np.array(codes)
 
-    def decode(self, codes, _MIDO_TIME_SCALE=0.8):
+    def decode(self, codes, _MIDO_TIME_SCALE=0.8, **kwargs):
+        # post process
+        last_appear = np.ones((128,)) * (-1)
+        post_process = []
+        current_t = 0.
+        for note in codes:
+            post_process.append(note)
+            note = note.argmax()
+            # print note
+            if note < 128:
+                if last_appear[note] == -1:
+                    last_appear[note] = current_t
+            elif note < 256:
+                last_appear[note-128] = -1
+            elif note < 356:
+                current_t += (note-256)*0.1
+
+            for key in range(128):
+                if last_appear[key] > 0 and \
+                   current_t - last_appear[key] > kwargs.get('max_sustain', 2.0):
+                    # print('force disable {}'.format(key))
+                    stop = np.zeros((363,))
+                    stop[key+128] = 1.
+                    last_appear[key] = -1
+                    post_process.append(stop)
+        codes = post_process
+
         msgs = []
         current_velocity = 0
         current_delay = 0.
