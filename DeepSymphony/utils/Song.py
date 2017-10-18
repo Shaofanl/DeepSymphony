@@ -60,7 +60,10 @@ class Song(object):
                 hots = encoder.encode(midi.midi)
                 data.append(hots)
             data = np.array(data)
-        return data
+        if kwargs.get('return_list', False):
+            return data, filelist
+        else:
+            return data
 
     @staticmethod
     def _copy(source, track, filter_f=lambda x: True, coef=1000):

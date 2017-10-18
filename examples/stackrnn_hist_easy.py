@@ -7,6 +7,9 @@ from DeepSymphony.utils import Song
 from DeepSymphony.utils.constants import NOTE_NUMBER
 from DeepSymphony.utils.stat import histogram, histogram_onehot,\
     min_norm, norm
+from DeepSymphony.utils.stat import LCS
+from tqdm import tqdm
+from pprint import pprint
 
 
 if __name__ == '__main__':
@@ -16,8 +19,10 @@ if __name__ == '__main__':
     coder = AllInOneCoder()
     H_TEMP = 0.05
 
-    data = Song.load_from_dir("./datasets/easymusicnotes/",
-                              encoder=AllInOneCoder(return_indices=True))
+    data, filelist = Song.load_from_dir(
+        "./datasets/easymusicnotes/",
+        encoder=AllInOneCoder(return_indices=True),
+        return_list=True)
     hist = np.load('./datasets/e-comp-allinone-hist.npz')['hist']
 
     def data_generator():
@@ -65,7 +70,8 @@ if __name__ == '__main__':
     model.build_generator('temp/stackedrnn_hist_easy.h5')
     res = model.generate(seed=64,
                          length=3000,
-                         addition=norm(hist[1], H_TEMP))
+                         addition=norm(hist[1], H_TEMP),
+                         verbose=0)
 
     events = [coder.code_to_name(note) for note in
               res[:, :DIM_IN-len(NOTE_NUMBER)].argmax(1)]
@@ -82,3 +88,12 @@ if __name__ == '__main__':
     for msgi in coder.decode(res, max_sustain=5.0):
         track.append(msgi)
     mid.save_as('simple_rnn.mid')
+
+    # LCS check
+    res = filter(lambda x: x < 128, res.argmax(1))
+    matches = []
+    for ind, ele in tqdm(enumerate(data)):
+        ele = filter(lambda x: x < 128, ele)
+        matches.append((LCS(ele, res),
+                        filelist[ind]))
+    pprint(sorted(matches)[::-1])

@@ -4,6 +4,9 @@ from keras.utils.np_utils import to_categorical
 from DeepSymphony.coders import AllInOneCoder
 from DeepSymphony.models import StackedRNN
 from DeepSymphony.utils import Song
+from DeepSymphony.utils.stat import LCS
+from tqdm import tqdm
+from pprint import pprint
 from keras import optimizers
 
 
@@ -11,8 +14,10 @@ if __name__ == '__main__':
     LEN = 100  # length of input
     DIM = 128+128+100+7
 
-    data = Song.load_from_dir("./datasets/easymusicnotes/",
-                              encoder=AllInOneCoder(return_indices=True))
+    data, filelist = Song.load_from_dir(
+        "./datasets/easymusicnotes/",
+        encoder=AllInOneCoder(return_indices=True),
+        return_list=True)
 
     def data_generator():
         batch_size = 32
@@ -47,10 +52,20 @@ if __name__ == '__main__':
 #               save_path='temp/start_with_me.h5')
 
     model.build_generator('temp/start_with_me.h5')
-    res = model.generate(seed=30, length=2000)
+    res = model.generate(seed=32, length=2000, verbose=0)
 
+    # store
     mid = Song()
     track = mid.add_track()
     for msgi in AllInOneCoder().decode(res):
         track.append(msgi)
     mid.save_as('simple_rnn.mid')
+
+    # LCS check
+    res = filter(lambda x: x < 128, res.argmax(1))
+    matches = []
+    for ind, ele in tqdm(enumerate(data)):
+        ele = filter(lambda x: x < 128, ele)
+        matches.append((LCS(ele, res),
+                        filelist[ind]))
+    pprint(sorted(matches)[::-1])

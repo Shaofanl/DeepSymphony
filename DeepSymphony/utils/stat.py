@@ -39,3 +39,35 @@ def norm(h, temperature=1.0):
         h = np.exp(h/temperature)
         h /= h.sum()
     return h
+
+
+def LCS(P, Q, return_seq=False):
+    f = [[0 for j in xrange(len(Q)+1)] for i in xrange(len(P)+1)]
+
+    for i, x in enumerate(P):
+        for j, y in enumerate(Q):
+            if x == y:
+                f[i+1][j+1] = f[i][j]+1
+            else:
+                f[i+1][j+1] = max(f[i+1][j], f[i][j+1])
+
+    if not return_seq:
+        return f[len(P)][len(Q)]
+
+    result = ""
+    P_indicator = [False for i in xrange(len(P)+1)]
+    Q_indicator = [False for i in xrange(len(Q)+1)]
+    x, y = len(P), len(Q)
+    while x != 0 and y != 0:
+        if f[x][y] == f[x-1][y]:
+            x -= 1
+        elif f[x][y] == f[x][y-1]:
+            y -= 1
+        else:
+            assert f[x-1] == f[y-1]
+            result = f[x-1] + result
+            x -= 1
+            y -= 1
+            P_indicator[x-1] = True
+            Q_indicator[y-1] = True
+    return f[len(P)][len(Q)], result, P_indicator, Q_indicator
