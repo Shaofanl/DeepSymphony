@@ -7,9 +7,6 @@ from DeepSymphony.utils import Song
 from DeepSymphony.utils.constants import NOTE_NUMBER
 from DeepSymphony.utils.stat import histogram, histogram_onehot,\
     min_norm, norm
-from DeepSymphony.utils.stat import LCS
-from tqdm import tqdm
-from pprint import pprint
 
 
 if __name__ == '__main__':
@@ -88,12 +85,3 @@ if __name__ == '__main__':
     for msgi in coder.decode(res, max_sustain=5.0):
         track.append(msgi)
     mid.save_as('simple_rnn.mid')
-
-    # LCS check
-    res = filter(lambda x: x < 128, res.argmax(1))
-    matches = []
-    for ind, ele in tqdm(enumerate(data)):
-        ele = filter(lambda x: x < 128, ele)
-        matches.append((LCS(ele, res),
-                        filelist[ind]))
-    pprint(sorted(matches)[::-1])

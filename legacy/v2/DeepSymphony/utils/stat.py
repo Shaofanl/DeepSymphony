@@ -55,8 +55,8 @@ def LCS(P, Q, return_seq=False):
         return f[len(P)][len(Q)]
 
     result = ""
-    P_indicator = [False for i in xrange(len(P)+1)]
-    Q_indicator = [False for i in xrange(len(Q)+1)]
+    P_indicator = np.array([False for i in xrange(len(P)+1)], dtype='float')
+    Q_indicator = np.array([False for i in xrange(len(Q)+1)], dtype='float')
     x, y = len(P), len(Q)
     while x != 0 and y != 0:
         if f[x][y] == f[x-1][y]:
@@ -64,8 +64,8 @@ def LCS(P, Q, return_seq=False):
         elif f[x][y] == f[x][y-1]:
             y -= 1
         else:
-            assert f[x-1] == f[y-1]
-            result = f[x-1] + result
+            assert P[x-1] == Q[y-1]
+            result = '<{}>'.format(P[x-1]) + result
             x -= 1
             y -= 1
             P_indicator[x-1] = True
