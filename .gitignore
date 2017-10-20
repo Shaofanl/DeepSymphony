@@ -7,3 +7,4 @@ datasets/
 *.pyc
 *.mp3
 legacy/v1/temp/*
+tensorboard/*
