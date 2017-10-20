@@ -1,9 +1,10 @@
-# internal imports
+from DeepSymphony.common.HParam import HParam
+from DeepSymphony.common.RNN import rnn_wrapper
+
 import tensorflow as tf
 import numpy as np
 import os
 import tensorflow.contrib.rnn as rnn
-from DeepSymphony.common.HParam import HParam
 import shutil
 
 
@@ -24,24 +25,22 @@ class StackedLSTMHParam(HParam):
     temperature = 1.0
 
     def __init__(self, **kwargs):
-        super(StackedLSTMHParam, self).__init__(**kwargs)
+        self.register_check('timesteps')
+        self.register_check('input_dim')
+        self.register_check('output_dim')
 
-        assert(hasattr(self, 'timesteps'))
-        assert(hasattr(self, 'input_dim'))
-        assert(hasattr(self, 'output_dim'))
+        super(StackedLSTMHParam, self).__init__(**kwargs)
 
 
 class StackedLSTM(object):
-    def __init__(self, hparam=None):
+    def __init__(self, hparam):
         self.built = False
-        if hparam is None:
-            hparam = StackedLSTMHParam()
         self.hparam = hparam
 
     def build(self, mode):
         assert(self.built is False)
-        hparam = self.hparam
         assert(mode in ['train', 'generate'])
+        hparam = self.hparam
 
         if mode == 'train':
             inputs = tf.placeholder("float", [hparam.batch_size,
@@ -58,14 +57,20 @@ class StackedLSTM(object):
                                     name="inputs")
 
         with tf.variable_scope("LSTM"):
-            cells = [hparam.basic_cell(c) for c in hparam.cells]
-            cells = rnn.MultiRNNCell(cells)
-            init_state = cells.zero_state(hparam.batch_size, tf.float32)
+            # simple form
+            cells, init_state, outputs, final_state = \
+                    rnn_wrapper(inputs=inputs,
+                                cells=hparam.cells,
+                                basic_cell=hparam.basic_cell)
 
-            outputs, final_state = tf.nn.dynamic_rnn(
-                cells, inputs,
-                initial_state=init_state,
-                swap_memory=True)
+            # detailed form
+            # cells = [hparam.basic_cell(c) for c in hparam.cells]
+            # cells = rnn.MultiRNNCell(cells)
+            # init_state = cells.zero_state(hparam.batch_size, tf.float32)
+
+            # outputs, final_state = tf.nn.dynamic_rnn(
+            #     cells, inputs,
+            #     initial_state=init_state)
 
         with tf.variable_scope("top"):
             scores = tf.contrib.layers.linear(outputs,

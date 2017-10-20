@@ -57,7 +57,7 @@ if __name__ == '__main__':
             res[0, 0, ind] = 1
             return res
 
-        GEN_LEN = 1000
+        GEN_LEN = 2000
         result = model.generate(length=GEN_LEN,
                                 handle=handle)
         result = result.reshape(GEN_LEN,
