@@ -26,3 +26,29 @@ class MultiHotCoder(object):
                                 voice[start:start+len, c.pitch.midi] = 1.0
                     voices.append(voice)
         return np.array(voices)
+
+    def decode(self, codes):
+        # TODO: check correctness
+        nb_voices = codes.shape[0]
+        stream = ms.stream.Stream()
+        for vind in range(nb_voices):
+            starts = np.ones((codes.shape[-1],), dtype='int')*(-1)
+            voice = ms.stream.Voice()
+
+            codei = codes[vind]
+            codei = np.vstack([codei, np.zeros((codei.shape[1],))])
+            print codei.shape
+            for tind in range(codei.shape[0]):
+                for nind in range(codei.shape[1]):
+                    if codei[tind, nind] > 0:
+                        if starts[nind] == -1:
+                            starts[nind] = tind
+                    else:
+                        if starts[nind] != -1:
+                            note = ms.note.Note(nind)
+                            note.duration = \
+                                ms.duration.Duration(tind-starts[nind])
+                            voice.insert(starts[nind], note)
+                            starts[nind] = -1
+            stream.append(voice)
+        return stream

@@ -63,7 +63,8 @@ class ExampleCoder(object):
         current_t = 0.
         for note in codes:
             post_process.append(note)
-            note = note.argmax()
+            if not isinstance(note, int):
+                note = note.argmax()
             # print note
             if note < 128:
                 if last_appear[note] == -1:
@@ -88,7 +89,10 @@ class ExampleCoder(object):
         current_velocity = 0
         current_delay = 0.
         for code in codes:
-            ind = code.argmax()
+            if isinstance(code, int):
+                ind = code
+            else:
+                ind = code.argmax()
             if ind < self.EVENT_RANGE[0]:
                 msgs.append(Message('note_on',
                                     note=ind,

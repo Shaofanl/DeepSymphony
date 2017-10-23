@@ -3,6 +3,7 @@ from DeepSymphony.common.RNN import rnn_wrapper
 
 import os
 import shutil
+import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.rnn as rnn
 
@@ -38,19 +39,26 @@ class MultivoiceLSTM(object):
 
     def build(self, mode):
         assert(self.built is False)
-        assert(mode in ['train'])
+        assert(mode in ['train', 'generate'])
         hparam = self.hparam
 
-        inputs = [tf.placeholder("float", [hparam.batch_size,
-                                           hparam.timesteps,
-                                           hparam.input_dim],
-                                 name="inputs/v_{}".format(i))
-                  for i in range(hparam.nb_voices)]
-        labels = [tf.placeholder("float", [hparam.batch_size,
-                                           hparam.timesteps,
-                                           hparam.input_dim],
-                                 name="labels/v_{}".format(i))
-                  for i in range(hparam.nb_voices)]
+        if mode == 'train':
+            inputs = [tf.placeholder("float", [hparam.batch_size,
+                                               hparam.timesteps,
+                                               hparam.input_dim],
+                                     name="inputs/v_{}".format(i))
+                      for i in range(hparam.nb_voices)]
+            labels = [tf.placeholder("float", [hparam.batch_size,
+                                               hparam.timesteps,
+                                               hparam.input_dim],
+                                     name="labels/v_{}".format(i))
+                      for i in range(hparam.nb_voices)]
+        elif mode == 'generate':
+            inputs = [tf.placeholder("float", [hparam.batch_size,
+                                               1,
+                                               hparam.input_dim],
+                                     name="inputs/v_{}".format(i))
+                      for i in range(hparam.nb_voices)]
 
         # for generation
         init_states = []
@@ -83,7 +91,7 @@ class MultivoiceLSTM(object):
             for vind in range(hparam.nb_voices):
                 with tf.variable_scope("voice_{}".format(vind)):
                     cells, init_state, outputs, final_state = \
-                        rnn_wrapper(inputs=inputs[vind],
+                        rnn_wrapper(inputs=mid_outputs,
                                     cells=hparam.b_cells,
                                     basic_cell=hparam.basic_cell)
                     outputs = tf.contrib.layers.linear(outputs,
@@ -112,41 +120,82 @@ class MultivoiceLSTM(object):
                                   losses[vind])
 
             self.train_op = train_op
-            self.inputs = inputs
             self.labels = labels
             self.loss = total_loss
+        elif mode == 'generate':
+            pred = tf.nn.sigmoid(top_outputs)
 
-    def train(self, fetch_data):
+            self.pred = pred
+            self.init_states = init_states
+            self.final_states = final_states
+            self.top_outputs = top_outputs
+        self.inputs = inputs
+        self.built = True
+
+    def generate(self, handle, length=1000):
+        if self.built is False:
+            self.build(mode='generate')
+        hparam = self.hparam
+        saver = tf.train.Saver()
+        with tf.Session() as sess:
+            saver.restore(sess, os.path.join(hparam.workdir,
+                                             'MultivoiceLSTM.ckpt'))
+
+            results = []
+            current = np.random.randint(2, size=(hparam.nb_voices,
+                                                 hparam.batch_size,
+                                                 1,
+                                                 hparam.input_dim))
+            states = sess.run(self.init_states)
+            for i in range(length):
+                feed_dict = dict(zip(self.inputs, current) +
+                                 zip(self.init_states, states))
+                output, states = sess.run([self.pred, self.final_states],
+                                          feed_dict=feed_dict)
+                current = handle(output)
+                results.append(current)
+            return np.array(results)
+
+    def train(self, fetch_data, continued=None):
         if self.built is False:
             self.build(mode='train')
         hparam = self.hparam
 
-        if os.path.exists(hparam.workdir):
-            if hparam.overwrite_workdir:
-                shutil.rmtree(hparam.workdir)
-            else:
-                raise Exception("The workdir exists.")
-        os.makedirs(hparam.workdir)
-        os.makedirs(os.path.join(hparam.workdir, hparam.tensorboard_dir))
+        if not continued:
+            if os.path.exists(hparam.workdir):
+                if hparam.overwrite_workdir:
+                    shutil.rmtree(hparam.workdir)
+                else:
+                    raise Exception("The workdir exists.")
+            os.makedirs(hparam.workdir)
+            os.makedirs(os.path.join(hparam.workdir, hparam.tensorboard_dir))
 
         with tf.Session() as sess:
+            saver = tf.train.Saver()
+
             train_writer = tf.summary.FileWriter(
                 os.path.join(hparam.workdir, hparam.tensorboard_dir),
                 sess.graph)
             merged = tf.summary.merge_all()
-            sess.run(tf.global_variables_initializer())
 
-            i = 0
-            while i < hparam.iterations:
+            if continued:
+                print 'restoring'
+                saver.restore(sess, os.path.join(hparam.workdir,
+                                                 'MultivoiceLSTM.ckpt'))
+            else:
+                sess.run(tf.global_variables_initializer())
+
+            global_step = tf.get_collection(tf.GraphKeys.GLOBAL_STEP)[0]
+            i = begin = global_step.eval()
+            while i < hparam.iterations+begin:
                 xi, yi = fetch_data(hparam.batch_size)
                 feed_dict = dict(zip(self.inputs, xi)+zip(self.labels, yi))
 
                 _, loss, summary = sess.run([self.train_op, self.loss, merged],
                                             feed_dict=feed_dict)
+                i += 1
                 print('Step %d: loss = %.2f' % (i, loss))
                 train_writer.add_summary(summary, i)
-                i += 1
 
-            saver = tf.train.Saver()
             saver.save(sess, os.path.join(hparam.workdir,
                                           'MultivoiceLSTM.ckpt'))
