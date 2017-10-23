@@ -8,15 +8,20 @@ from DeepSymphony.utils.MidoWrapper import get_midi, save_midi
 
 
 if __name__ == '__main__':
+    # usage:
+    # 1. train a model
+    # 2. evaluate it if you want
+    # 3. collect the codes
+    # 4. generate with the collected code
     mode = 'train'
     # mode = 'eval'
     # mode = 'collect'
-    mode = 'generate'
+    # mode = 'generate'
 
     hparam = SeqAEHParam(batch_size=64,
                          encoder_cells=[256],
                          decoder_cells=[256],
-                         timesteps=1000,
+                         timesteps=1000 if mode == 'generate' else 100,
                          learning_rate=2e-3,
                          iterations=1200,
                          vocab_size=363,
@@ -42,7 +47,7 @@ if __name__ == '__main__':
             return np.array(seqs)
 
         if mode == 'train':
-            model.train(fetch_data, continued=True)
+            model.train(fetch_data)  # , continued=True)
         if mode == 'collect':
             collection, seqs = model.collect(fetch_data, samples=10)
             np.savez(hparam.workdir+'code_collection.npz',
