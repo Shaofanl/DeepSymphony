@@ -131,6 +131,9 @@
       long one, borrow
 
 
+0036t.mid ground truth
+0036.mid reconstructed
+
 
 TODO:change model
     original:

@@ -3,8 +3,9 @@ import numpy as np
 from DeepSymphony.models.SeqAE import (
     SeqAE, SeqAEHParam)
 from DeepSymphony.utils.BatchProcessing import map_dir
-from DeepSymphony.utils.MidoCoder import ExampleCoder
-from DeepSymphony.utils.MidoWrapper import get_midi, save_midi
+from DeepSymphony.utils.MidoWrapper import save_midi
+from DeepSymphony.utils.Music21Coder import NoteDurationCoder
+import music21 as ms
 
 
 if __name__ == '__main__':
@@ -15,25 +16,26 @@ if __name__ == '__main__':
     # 4. generate with the collected code
     mode = 'train'
     mode = 'eval'
-    # mode = 'collect'
-    # mode = 'generate'
+    mode = 'collect'
+    mode = 'generate'
 
     hparam = SeqAEHParam(batch_size=64,
                          encoder_cells=[256],
                          decoder_cells=[256],
-                         timesteps=1000 if mode == 'generate' else 20,
-                         learning_rate=2e-3,
-                         iterations=1200,
-                         vocab_size=363,
+                         timesteps=1000 if mode == 'generate' else 200,
+                         learning_rate=1e-3,
+                         iterations=500,
+                         vocab_size=128+1,
                          debug=False,
                          overwrite_workdir=True)
     model = SeqAE(hparam)
     model.build()
-    coder = ExampleCoder()
+    # coder = ExampleCoder()
+    coder = NoteDurationCoder()
 
     if mode in ['train', 'collect', 'eval']:
         data = np.array(map_dir(
-            lambda fn: coder.encode(get_midi(fn)),
+            lambda fn: coder.encode(ms.converter.parse(fn))[0],
             './datasets/easymusicnotes/'))
 
         print(len(data), map(lambda x: len(x), data))
@@ -51,7 +53,7 @@ if __name__ == '__main__':
             return np.array(seqs)
 
         if mode == 'train':
-            model.train(fetch_data)  # , continued=True)
+            model.train(fetch_data, continued=True)
         if mode == 'collect':
             collection, seqs = model.collect(fetch_data, samples=10)
             np.savez(hparam.workdir+'code_collection.npz',
@@ -76,10 +78,12 @@ if __name__ == '__main__':
         piece_id = 0
 
         result = model.generate(collection[collection_id])[piece_id]
-        save_midi('example.mid', coder.decode(result, [4]*len(result)))
+        coder.decode(result, [4]*len(result)).write('midi',
+                                                    'example.mid')
 
         truth = seqs[collection_id][piece_id]
-        save_midi('truth.mid', coder.decode(truth, [4]*len(result)))
+        coder.decode(truth, [4]*len(result)).write('midi',
+                                                   'truth.mid')
 
         # how to generate?
         #   encode with 100-length seq, and decode with 1000-length seq

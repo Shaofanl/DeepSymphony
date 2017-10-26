@@ -9,8 +9,8 @@ from DeepSymphony.models.MultivoiceLSTM import (
 
 
 if __name__ == '__main__':
-    # mode = 'train'
-    mode = 'generate'
+    mode = 'train'
+    # mode = 'generate'
 
     if mode == 'train':
         hparam = MultivoiceLSTMHParam(batch_size=64,
@@ -29,7 +29,8 @@ if __name__ == '__main__':
             lambda fn: coder.encode(ms.converter.parse(fn)),
             './datasets/easymusicnotes/')
         )
-        data = filter(lambda x: x.shape[0] == 2, data)
+        data = filter(lambda x: x.shape[0] >= 2, data)
+        data = map(lambda x: x[:2], data)
 
         def fetch_data(batch_size):
             x = [[] for _ in range(hparam.nb_voices)]
