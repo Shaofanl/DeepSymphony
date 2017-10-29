@@ -28,6 +28,7 @@ class SeqAEHParam(HParam):
 
     def __init__(self, **kwargs):
         self.register_check('timesteps')
+        self.register_check('gen_timesteps')
         self.register_check('vocab_size')
 
         super(SeqAEHParam, self).__init__(**kwargs)
@@ -121,7 +122,7 @@ class SeqAE(object):
             start_tokens=start_tokens,
             end_token=self.eos_token)
 
-        def decode(helper, scope, initial_state, reuse=None):
+        def decode(helper, scope, initial_state, timesteps, reuse=None):
             with tf.variable_scope(scope, reuse=reuse):
                 cells = rnn.MultiRNNCell([hparam.basic_cell(c)
                                           for c in hparam.decoder_cells])
@@ -132,7 +133,7 @@ class SeqAE(object):
                 final_outputs, final_state, final_sequence_lengths = \
                     seq2seq.dynamic_decode(
                         decoder=decoder, output_time_major=False,
-                        maximum_iterations=hparam.timesteps,
+                        maximum_iterations=timesteps,
                         # impute_finished=True,
                     )
                 scores = layers.linear(final_outputs.rnn_output,
@@ -142,7 +143,8 @@ class SeqAE(object):
                 return scores, pred
         scores, train_pred, = decode(train_helper,
                                      'decode',
-                                     initial_state=code)
+                                     initial_state=code,
+                                     timesteps=hparam.timesteps)
 
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
             labels=seqs,
@@ -159,6 +161,7 @@ class SeqAE(object):
         pred_scores, pred = decode(pred_helper,
                                    'decode',
                                    initial_state=code,
+                                   timesteps=hparam.gen_timesteps,
                                    reuse=True)
 
         # train

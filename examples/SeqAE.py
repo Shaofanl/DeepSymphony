@@ -14,14 +14,15 @@ if __name__ == '__main__':
     # 3. collect the codes
     # 4. generate with the collected code
     mode = 'train'
-    mode = 'eval'
+    # mode = 'eval'
     # mode = 'collect'
     # mode = 'generate'
 
     hparam = SeqAEHParam(batch_size=64,
                          encoder_cells=[256],
                          decoder_cells=[256],
-                         timesteps=1000 if mode == 'generate' else 20,
+                         timesteps=200,
+                         gen_timesteps=1000,
                          learning_rate=2e-3,
                          iterations=1200,
                          vocab_size=363,

@@ -5,6 +5,7 @@ from DeepSymphony.models.SeqAE import (
 from DeepSymphony.utils.BatchProcessing import map_dir
 from DeepSymphony.utils.MidoWrapper import save_midi
 from DeepSymphony.utils.Music21Coder import NoteDurationCoder
+from DeepSymphony.eval.LCS import eval_lcs
 import music21 as ms
 
 
@@ -22,9 +23,10 @@ if __name__ == '__main__':
     hparam = SeqAEHParam(batch_size=64,
                          encoder_cells=[256],
                          decoder_cells=[256],
-                         timesteps=1000 if mode == 'generate' else 200,
-                         learning_rate=1e-3,
-                         iterations=500,
+                         timesteps=200,
+                         gen_timesteps=1000,
+                         learning_rate=5e-3,
+                         iterations=2000,
                          vocab_size=128+1,
                          debug=False,
                          overwrite_workdir=True)
@@ -53,8 +55,9 @@ if __name__ == '__main__':
             return np.array(seqs)
 
         if mode == 'train':
-            model.train(fetch_data, continued=True)
+            model.train(fetch_data)  # continued=True)
         if mode == 'collect':
+            np.random.seed(32)
             collection, seqs = model.collect(fetch_data, samples=10)
             np.savez(hparam.workdir+'code_collection.npz',
                      wrapper={'code': collection, 'seqs': seqs})
@@ -75,15 +78,38 @@ if __name__ == '__main__':
             __getitem__('wrapper').flatten()[0].get('seqs')
 
         collection_id = 0
-        piece_id = 0
+        piece_id = 4
 
         result = model.generate(collection[collection_id])[piece_id]
-        coder.decode(result, [4]*len(result)).write('midi',
+        coder.decode(result, [2]*len(result)).write('midi',
                                                     'example.mid')
 
         truth = seqs[collection_id][piece_id]
-        coder.decode(truth, [4]*len(result)).write('midi',
-                                                   'truth.mid')
+        coder.decode(truth, [2]*len(truth)).write('midi',
+                                                  'truth.mid')
+
+        # find the whole truth song:
+        if False:
+            data = np.array(map_dir(
+                lambda fn: coder.encode(ms.converter.parse(fn))[0],
+                './datasets/easymusicnotes/'))
+            data = filter(lambda x: len(x) > hparam.timesteps, data)
+
+            print eval_lcs(result, data)
+
+            def fetch_data(batch_size):
+                seqs = []
+                for _ in range(batch_size):
+                    ind = np.random.randint(len(data))
+                    start = np.random.randint(data[ind].shape[0] -
+                                              hparam.timesteps-1)
+                    seq = data[ind]
+                    seqs.append(seq)
+                return np.array(seqs)
+            np.random.seed(32)
+            whole = fetch_data(hparam.batch_size)[piece_id]
+            coder.decode(whole, [2]*len(whole)).write('midi',
+                                                      'whole.mid')
 
         # how to generate?
         #   encode with 100-length seq, and decode with 1000-length seq
