@@ -6,10 +6,17 @@ class NoteDurationCoder(object):
     '''
         code = onehot vector of notes + onehot vector of duration
     '''
-    def __init__(self, keys=128, resolution=0.25, maxduration=16):
+    def __init__(self,
+                 keys=128,
+                 resolution=0.25,
+                 maxduration=16,
+                 normalize_key=None,
+                 single=False,):
         self.keys = keys
         self.resolution = resolution
         self.maxduration = maxduration
+        self.normalize_key = normalize_key
+        self.single = single
 
     def encode(self, score,):
         notes = []  # (offset, pitch, duration)
@@ -17,14 +24,23 @@ class NoteDurationCoder(object):
             if part.partName is None or 'Piano' not in part.partName:
                 continue
 
-            for comp in part.flat.notes:
+            part = part.flat
+            if self.normalize_key:
+                part.transpose(self.normalize_key)
+                print 'transpose to', self.normalize_key
+
+            for comp in part.notes:
                 start = int(comp.offset/self.resolution)
                 duration = max(int(comp.quarterLength/self.resolution), 1)
                 if isinstance(comp, ms.note.Note):
                     notes.append((start, comp.pitch.midi, duration))
                 elif isinstance(comp, ms.chord.Chord):
-                    for c in comp:
+                    if self.single:
+                        c = np.random.choice(comp)
                         notes.append((start, c.pitch.midi, duration))
+                    else:
+                        for c in comp:
+                            notes.append((start, c.pitch.midi, duration))
         if len(notes) == 0:
             return [], []
 
@@ -50,6 +66,8 @@ class NoteDurationCoder(object):
         return np.array(notecode), np.array(duracode)
 
     def decode(self, notecode, duracode):
+        if isinstance(duracode, int):
+            duracode = [duracode] * len(notecode)
         s = ms.stream.Stream()
 
         current_t = 0
