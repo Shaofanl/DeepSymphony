@@ -36,9 +36,10 @@ if __name__ == '__main__':
     )
     model = SeqGAN(hparam)
     model.build()
-    coder = NoteDurationCoder(normalize_key='d5', single=True)
+    coder = NoteDurationCoder(normalize_key='C5', first_voice=True)
 
     try:
+        raise Exception
         data = np.load('temp/easy.npz')['data']
     except:
         data = np.array(map_dir(

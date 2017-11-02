@@ -99,7 +99,7 @@ class SeqGAN(object):
                 x = ResNetBuilder(dis_train,
                                   bn_scopes=['fake', 'real'],
                                   bn_scope=bn_scope).\
-                    resnet(x, structure=[2, 2, 2, 2], filters=32, nb_class=1)
+                    resnet(x, structure=[2, 2, 2, 2], filters=4, nb_class=1)
                 x = tf.nn.sigmoid(x)
             return x
         # opt

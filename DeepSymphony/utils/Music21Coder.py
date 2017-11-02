@@ -11,23 +11,38 @@ class NoteDurationCoder(object):
                  resolution=0.25,
                  maxduration=16,
                  normalize_key=None,
-                 single=False,):
+                 single=False,
+                 first_voice=False):
         self.keys = keys
         self.resolution = resolution
         self.maxduration = maxduration
         self.normalize_key = normalize_key
         self.single = single
+        self.first_voice = first_voice
 
     def encode(self, score,):
         notes = []  # (offset, pitch, duration)
         for part in score.parts:
             if part.partName is None or 'Piano' not in part.partName:
                 continue
+            nb_voice = len([e for e in part.voices])
+            if nb_voice == 0:
+                continue
+
+            print 'number of voices', nb_voice
+            if self.first_voice:
+                part = part.voices[0]
+            print 'key', part.analyze('key')
 
             part = part.flat
             if self.normalize_key:
-                part.transpose(self.normalize_key)
-                print 'transpose to', self.normalize_key
+                pitches = part.analyze('key').pitches
+                interval = ms.interval.Interval(
+                    pitches[0], ms.pitch.Pitch(self.normalize_key)
+                )
+                part = part.transpose(interval)
+                # print 'transpose to', self.normalize_key
+                print 'transpose key to', part.analyze('key')
 
             for comp in part.notes:
                 start = int(comp.offset/self.resolution)

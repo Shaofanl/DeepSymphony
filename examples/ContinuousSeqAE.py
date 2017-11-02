@@ -21,31 +21,35 @@ if __name__ == '__main__':
     mode = 'train'
     # mode = 'eval'
     # mode = 'continuous_eval'
-    mode = 'rec'
+    # mode = 'rec'
     # mode = 'plot'
-    mode = 'random_walk'
+    # mode = 'random_walk'
     # mode = 'shift'
 
     hparam = ContinuousSeqAEHParam(batch_size=128,
-                                   encoder_cells=[128],
-                                   decoder_cells=[128],
+                                   encoder_cells=[256, 128],
+                                   decoder_cells=[128, 256],
                                    timesteps=8,
                                    gen_timesteps=8,
-                                   embed_dim=500,
+                                   embed_dim=512,
                                    basic_cell=tf.contrib.rnn.GRUCell,
-                                   learning_rate=5e-3,
+                                   learning_rate=1e-3,
                                    iterations=5000,
-                                   continued=False,
+                                   continued=True,
+                                   only_train_quantized_rec=False,
                                    vocab_size=128+1,
                                    debug=False,
                                    overwrite_workdir=True,
                                    clip_norm=1.,
-                                   alpha=0.001,
-                                   beta=10.00,)
+                                   alpha=5e-3,  # 5-->2
+                                   beta=1.00,
+                                   gamma=2e-2)
     model = ContinuousSeqAE(hparam)
     model.build()
     # coder = ExampleCoder()
-    coder = NoteDurationCoder(normalize_key='d5', single=True)
+    coder = NoteDurationCoder(normalize_key='C5',
+                              # single=True,
+                              first_voice=True)
 
     try:
         data = np.load('temp/easy.npz')['data']
@@ -129,29 +133,34 @@ if __name__ == '__main__':
             print pred[i][:2*hparam.timesteps]
     if mode == 'continuous_eval':
         np.set_printoptions(precision=3)
-        seq = test_data[0].copy()
+        seq = train_data[1].copy()
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
-        code = model.encode(batch[:hparam.batch_size], quantized=True)[0]
-        print np.sqrt( ((code[:-1] - code[1:])**2).sum(1) )
-        print np.sqrt( ((code[0] - code)**2).sum(1) )
-        print np.sqrt( ((code[1] - code)**2).sum(1) )
-        print np.sqrt( ((code[2] - code)**2).sum(1) )
-        print np.sqrt( ((code[3] - code)**2).sum(1) )
+        code = model.encode(batch[:hparam.batch_size], quantized=True)
+        code = model.encode(batch[:hparam.batch_size], quantized=False)
+        import ipdb
+        ipdb.set_trace()
+        print (code[:-1] != code[1:]).sum(1)
+        print code[0]
+        print code[1]
+        print (code[0][None, :] != code).sum(1)
+        print (code[1][None, :] != code).sum(1)
+        print (code[2][None, :] != code).sum(1)
+        print (code[3][None, :] != code).sum(1)
         print code.min()
         print code.max()
         print code.mean()
 
-        for c in code:
-            print np.histogram(c)
+        # for c in code:
+            # print np.histogram(c)
 
     if mode == 'rec':
         seq = train_data[0].copy()
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
-        ori = code = model.encode(batch, quantized=True)[0]
+        ori = code = model.encode(batch, quantized=True)
         print code
         rec = model.generate(code, quantized=True).flatten()
         print seq.shape
@@ -182,41 +191,40 @@ if __name__ == '__main__':
 
     if mode == 'random_walk':
         np.set_printoptions(precision=3)
-        seq = train_data[0].copy()
+        seq = train_data[1].copy()
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
         code = model.encode(batch, quantized=True)[0]
 
         gen = []
-        pos = code[0]
+        pos = code
         theme = pos.copy()
         # pos = np.random.binomial(2, 0.5, size=(len(code[0],)))/2.
         print pos
-        for i in range(200):
+        for i in range(1000):
             # rand = np.random.normal(size=(len(pos),))
             # rand /= np.sqrt((rand**2).sum())
             # pos = np.clip(pos + rand, 0, 1)
 
-            randint = np.random.binomial(1, 10./len(theme), size=(len(theme),))
-            replace = np.random.binomial(1, 0.5, size=(len(theme),))*2-1
-            pos[randint == 1] = replace[randint == 1]
+            randint = np.random.randint(len(theme), size=(8,))
+            pos[randint] = -pos[randint]
 
             # if np.random.rand() < 0.05:
             #    # shift of theme
             #    theme = pos.copy()
 
             if i % 4 == 0:
-                if np.random.rand() < 0.50:
+                if np.random.rand() < 0.10:
+                    theme = pos.copy()
+                if np.random.rand() < 0.80:
                     pos = theme.copy()
-                else:
-                    pass
 
             gen.append(pos.copy())
             print pos
         gen = np.array(gen)
 
-        song = model.generate((gen,), quantized=True).flatten()
+        song = model.generate(gen, quantized=True).flatten()
         coder.decode(song, 2).write('midi', 'example.mid')
 
     if mode == 'shift':
