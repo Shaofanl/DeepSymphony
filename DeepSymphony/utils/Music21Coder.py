@@ -10,21 +10,28 @@ class NoteDurationCoder(object):
                  keys=128,
                  resolution=0.25,
                  maxduration=16,
-                 normalize_key=None,
-                 single=False,
-                 first_voice=False):
+                 normalize_key=None,  # the normalize target
+                 single=False,  # randomly pick one from chord
+                 first_voice=False):  # only return the first voice
         self.keys = keys
         self.resolution = resolution
         self.maxduration = maxduration
         self.normalize_key = normalize_key
         self.single = single
+        # drepcated
         self.first_voice = first_voice
 
     def encode(self, score,):
+        if self.first_voice:
+            raise NotImplemented("buged")
+
         notes = []  # (offset, pitch, duration)
         for part in score.parts:
             if part.partName is None or 'Piano' not in part.partName:
                 continue
+            import ipdb
+            ipdb.set_trace()
+
             nb_voice = len([e for e in part.voices])
             if nb_voice == 0:
                 continue
@@ -41,7 +48,6 @@ class NoteDurationCoder(object):
                     pitches[0], ms.pitch.Pitch(self.normalize_key)
                 )
                 part = part.transpose(interval)
-                # print 'transpose to', self.normalize_key
                 print 'transpose key to', part.analyze('key')
 
             for comp in part.notes:
@@ -157,8 +163,62 @@ class MultiHotCoder(object):
         return stream
 
 
+class MeasureSplitCoder(object):
+    def __init__(self,
+                 keys=128,
+                 normalize_key=None,  # the normalize target
+                 ):
+        self.keys = keys
+        self.normalize_key = normalize_key
+
+    def encode(self, score,):
+        # Score > Part > Measure > Voice
+
+        if self.normalize_key:
+            cur_key = score.analyze('key').pitches
+            interval = ms.interval.Interval(
+                cur_key[0], ms.pitch.Pitch(self.normalize_key)
+            )
+            score = score.transpose(interval)
+            print 'transpose key to', score.analyze('key')
+
+        res = []
+        for part in song.measures(0, None):
+            if part.partName != 'Piano':
+                continue
+
+            for measure in part[1:]:
+                # instrument
+                clef, timeSignature = measure[:2]
+                print timeSignature
+                for voice in measure[2:]:
+                    # clef, time signature
+                    print measure
+                    for ele in voice:
+                        print ele
+        return 0
+
+
+    def decode(self, notecode, duracode):
+        if isinstance(duracode, int):
+            duracode = [duracode] * len(notecode)
+        s = ms.stream.Stream()
+
+        current_t = 0
+        for note, dura in zip(notecode, duracode):
+            if note == self.keys:
+                current_t += dura*self.resolution
+            else:
+                duration = ms.duration.Duration(dura*self.resolution)
+                s.insert(current_t,
+                         ms.note.Note(note,
+                                      duration=duration))
+        return s
+
+
 if __name__ == '__main__':
     # coder = MultiHotCoder()
     coder = NoteDurationCoder()
     res = coder.encode(ms.converter.parse('/home/ly/projects/deepsymphony/datasets/easymusicnotes/level11/the-penny-theme-victor-m-barba-movies-piano-level-11.mid'))
     print res
+

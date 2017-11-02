@@ -6,10 +6,10 @@ from DeepSymphony.models.SeqAE import (
     ContinuousSeqAE, ContinuousSeqAEHParam)
 from DeepSymphony.utils.BatchProcessing import map_dir
 from DeepSymphony.utils.Music21Coder import NoteDurationCoder
-from DeepSymphony.eval.LCS import eval_lcs
 import music21 as ms
 from sklearn.model_selection import train_test_split
 from DeepSymphony.utils.sample import continuous_sample
+from DeepSymphony.utils.sample import remove_con_dup
 
 
 if __name__ == '__main__':
@@ -20,10 +20,10 @@ if __name__ == '__main__':
     # 4. generate with the collected code
     mode = 'train'
     # mode = 'eval'
-    # mode = 'continuous_eval'
-    # mode = 'rec'
+    mode = 'continuous_eval'
+    mode = 'rec'
     # mode = 'plot'
-    # mode = 'random_walk'
+    mode = 'random_walk'
     # mode = 'shift'
 
     hparam = ContinuousSeqAEHParam(batch_size=128,
@@ -36,12 +36,12 @@ if __name__ == '__main__':
                                    learning_rate=1e-3,
                                    iterations=5000,
                                    continued=True,
-                                   only_train_quantized_rec=False,
+                                   only_train_quantized_rec=True,
                                    vocab_size=128+1,
                                    debug=False,
                                    overwrite_workdir=True,
                                    clip_norm=1.,
-                                   alpha=5e-3,  # 5-->2
+                                   alpha=6e-3,  # 5-->2
                                    beta=1.00,
                                    gamma=2e-2)
     model = ContinuousSeqAE(hparam)
@@ -61,6 +61,7 @@ if __name__ == '__main__':
 
     print(len(data), map(lambda x: len(x), data))
     data = filter(lambda x: len(x) > hparam.timesteps, data)
+    data = map(remove_con_dup, data)
     print(len(data), map(lambda x: len(x), data))
 
     train_data, test_data = train_test_split(data,
@@ -138,9 +139,6 @@ if __name__ == '__main__':
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
         code = model.encode(batch[:hparam.batch_size], quantized=True)
-        code = model.encode(batch[:hparam.batch_size], quantized=False)
-        import ipdb
-        ipdb.set_trace()
         print (code[:-1] != code[1:]).sum(1)
         print code[0]
         print code[1]
@@ -156,7 +154,7 @@ if __name__ == '__main__':
             # print np.histogram(c)
 
     if mode == 'rec':
-        seq = train_data[0].copy()
+        seq = train_data[1].copy()
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
@@ -175,7 +173,7 @@ if __name__ == '__main__':
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
-        code = model.encode(batch, quantized=True)[0]  # first layer
+        code = model.encode(batch, quantized=True)  # first layer
         print code
 
         from sklearn.manifold import TSNE
@@ -202,12 +200,12 @@ if __name__ == '__main__':
         theme = pos.copy()
         # pos = np.random.binomial(2, 0.5, size=(len(code[0],)))/2.
         print pos
-        for i in range(1000):
+        for i in range(200):
             # rand = np.random.normal(size=(len(pos),))
             # rand /= np.sqrt((rand**2).sum())
             # pos = np.clip(pos + rand, 0, 1)
 
-            randint = np.random.randint(len(theme), size=(8,))
+            randint = np.random.randint(len(theme), size=(2,))
             pos[randint] = -pos[randint]
 
             # if np.random.rand() < 0.05:
