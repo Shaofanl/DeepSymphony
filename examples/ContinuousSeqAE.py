@@ -193,11 +193,13 @@ if __name__ == '__main__':
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
-        code = model.encode(batch, quantized=True)[0]
+        code = model.encode(batch, quantized=True)
 
         gen = []
-        pos = code
-        theme = pos.copy()
+        pos = code[0]
+        _theme = code[0].copy()
+        _theme2 = code[20].copy()
+        theme = _theme
         # pos = np.random.binomial(2, 0.5, size=(len(code[0],)))/2.
         print pos
         for i in range(200):
@@ -212,11 +214,15 @@ if __name__ == '__main__':
             #    # shift of theme
             #    theme = pos.copy()
 
-            if i % 4 == 0:
-                if np.random.rand() < 0.10:
-                    theme = pos.copy()
-                if np.random.rand() < 0.80:
-                    pos = theme.copy()
+            if i % 2 == 0:
+                _theme, _theme2 = _theme2, _theme
+                pos = _theme.copy()
+
+            # if i % 4 == 0:
+            #     if np.random.rand() < 0.10:
+            #         theme = pos.copy()
+            #     if np.random.rand() < 0.80:
+            #         pos = theme.copy()
 
             gen.append(pos.copy())
             print pos
