@@ -189,7 +189,7 @@ if __name__ == '__main__':
 
     if mode == 'random_walk':
         np.set_printoptions(precision=3)
-        seq = train_data[1].copy()
+        seq = train_data[0].copy()
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
@@ -205,7 +205,7 @@ if __name__ == '__main__':
             # rand /= np.sqrt((rand**2).sum())
             # pos = np.clip(pos + rand, 0, 1)
 
-            randint = np.random.randint(len(theme), size=(2,))
+            randint = np.random.randint(len(theme), size=(3,))
             pos[randint] = -pos[randint]
 
             # if np.random.rand() < 0.05:
