@@ -20,30 +20,30 @@ if __name__ == '__main__':
     # 4. generate with the collected code
     mode = 'train'
     # mode = 'eval'
-    mode = 'continuous_eval'
-    mode = 'rec'
+    # mode = 'continuous_eval'
+    # mode = 'rec'
     # mode = 'plot'
     mode = 'random_walk'
     # mode = 'shift'
 
     hparam = ContinuousSeqAEHParam(batch_size=128,
-                                   encoder_cells=[256, 128],
-                                   decoder_cells=[128, 256],
+                                   encoder_cells=[256, 16],
+                                   decoder_cells=[16, 256],
                                    timesteps=8,
                                    gen_timesteps=8,
                                    embed_dim=512,
                                    basic_cell=tf.contrib.rnn.GRUCell,
                                    learning_rate=1e-3,
-                                   iterations=5000,
-                                   continued=True,
-                                   only_train_quantized_rec=True,
+                                   iterations=2000,
+                                   continued=False,
+                                   only_train_quantized_rec=False,
                                    vocab_size=128+1,
                                    debug=False,
                                    overwrite_workdir=True,
                                    clip_norm=1.,
-                                   alpha=6e-3,  # 5-->2
+                                   alpha=1e-4,  # 5-->2, alpha*con_loss
                                    beta=1.00,
-                                   gamma=2e-2)
+                                   gamma=2e-2)  # gamma*q_loss
     model = ContinuousSeqAE(hparam)
     model.build()
     # coder = ExampleCoder()
@@ -103,9 +103,12 @@ if __name__ == '__main__':
     fetch_train_tri_data = fetch_tri_data_g(train_data)
     fetch_test_tri_data = fetch_tri_data_g(test_data)
 
+    fetch_one_data = fetch_data_g([train_data[1]])
+    fetch_one_tri_data = fetch_tri_data_g([train_data[1]])
+
     if mode == 'train':
-        model.train(fetch_train_data,
-                    fetch_train_tri_data,
+        model.train(fetch_one_data,
+                    fetch_one_tri_data,
                     continued=hparam.continued)
     if mode == 'collect':
         np.random.seed(32)
@@ -189,34 +192,41 @@ if __name__ == '__main__':
 
     if mode == 'random_walk':
         np.set_printoptions(precision=3)
-        seq = train_data[0].copy()
+        seq = train_data[1].copy()
         batch = continuous_sample(seq,
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
         code = model.encode(batch, quantized=True)
+        # code = model.encode([[60, 128, 60, 128, 64, 128, 64, 128]],
+        #                     quantized=True)
 
-        gen = []
+        rng = np.random.RandomState(32)
         pos = code[0]
         _theme = code[0].copy()
-        _theme2 = code[20].copy()
+        # _theme2 = code[18].copy()
         theme = _theme
+        gen = [pos.copy()]
         # pos = np.random.binomial(2, 0.5, size=(len(code[0],)))/2.
-        print pos
-        for i in range(200):
+        for i in range(500):
             # rand = np.random.normal(size=(len(pos),))
             # rand /= np.sqrt((rand**2).sum())
             # pos = np.clip(pos + rand, 0, 1)
 
-            randint = np.random.randint(len(theme), size=(3,))
-            pos[randint] = -pos[randint]
+            if rng.rand() < 0.5:
+                pos = -pos
+            else:
+                randint = rng.choice(len(theme), size=(2,), replace=False)
+                pos[randint] = -pos[randint]
 
             # if np.random.rand() < 0.05:
             #    # shift of theme
             #    theme = pos.copy()
 
-            if i % 2 == 0:
-                _theme, _theme2 = _theme2, _theme
-                pos = _theme.copy()
+            # if i % 4 == 0:
+            #     if np.random.rand() < 0.10:
+            #         _theme = pos.copy()
+            #     _theme, _theme2 = _theme2, _theme
+            #     pos = _theme.copy()
 
             # if i % 4 == 0:
             #     if np.random.rand() < 0.10:
@@ -224,11 +234,20 @@ if __name__ == '__main__':
             #     if np.random.rand() < 0.80:
             #         pos = theme.copy()
 
+            # if np.random.rand() < 0.50:
+            #     randint = np.random.randint(len(theme), size=(8,))
+            #     pos[randint] = -pos[randint]
+
+            if rng.rand() < 0.10:
+                print 'repeat'
+                gen.extend(gen[-4:])
+
             gen.append(pos.copy())
-            print pos
+            # print pos
         gen = np.array(gen)
 
         song = model.generate(gen, quantized=True).flatten()
+        np.savez('temp/oneshot_example.npz', song=song)
         coder.decode(song, 2).write('midi', 'example.mid')
 
     if mode == 'shift':

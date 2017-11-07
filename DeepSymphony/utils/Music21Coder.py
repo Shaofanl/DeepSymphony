@@ -29,8 +29,6 @@ class NoteDurationCoder(object):
         for part in score.parts:
             if part.partName is None or 'Piano' not in part.partName:
                 continue
-            import ipdb
-            ipdb.set_trace()
 
             nb_voice = len([e for e in part.voices])
             if nb_voice == 0:
@@ -163,13 +161,15 @@ class MultiHotCoder(object):
         return stream
 
 
-class MeasureSplitCoder(object):
+class MeasureSplitCoder(NoteDurationCoder):
     def __init__(self,
                  keys=128,
+                 resolution=0.25,
                  normalize_key=None,  # the normalize target
                  ):
         self.keys = keys
         self.normalize_key = normalize_key
+        self.resolution = resolution
 
     def encode(self, score,):
         # Score > Part > Measure > Voice
@@ -182,22 +182,57 @@ class MeasureSplitCoder(object):
             score = score.transpose(interval)
             print 'transpose key to', score.analyze('key')
 
-        res = []
-        for part in song.measures(0, None):
+        notes = []
+        duras = []
+        for part in score.measures(0, None):
             if part.partName != 'Piano':
                 continue
 
-            for measure in part[1:]:
-                # instrument
-                clef, timeSignature = measure[:2]
-                print timeSignature
-                for voice in measure[2:]:
-                    # clef, time signature
-                    print measure
-                    for ele in voice:
-                        print ele
-        return 0
+            for measure in part:
+                if isinstance(measure, ms.instrument.Instrument):
+                    continue
+                measure_res = []
+                for voice in measure:
+                    if isinstance(voice, ms.clef.Clef):
+                        continue
+                    if isinstance(voice, ms.meter.TimeSignature):
+                        continue
+                    if isinstance(voice, ms.bar.Barline):
+                        continue
 
+                    for ele in voice:
+                        if not hasattr(ele, '__iter__'):
+                            ele = [ele]  # standarize note and chord
+                        for c in ele:
+                            if isinstance(c, ms.note.Rest):
+                                continue
+                            start = int(np.round(c.offset/self.resolution))
+                            duration = max(int(np.round(
+                                c.quarterLength/self.resolution)), 1)
+                            measure_res.append((start, c.pitch.midi, duration))
+
+                    measure_res = sorted(measure_res)
+                    note, dura = self._serialize(measure_res)
+                    notes.append(note)
+                    duras.append(dura)
+        notes = np.array(notes)
+        duras = np.array(duras)
+        return notes, duras
+
+    def _serialize(self, notes):
+        notecode = []
+        duracode = []
+        last_t = 0
+        for ind, note in enumerate(notes):
+            if note[0] > last_t:
+                # skip action
+                notecode.append(self.keys)
+                duracode.append(note[0]-last_t)
+                last_t = note[0]
+            notecode.append(note[1])
+            duracode.append(note[2])
+        # duracode = map(lambda x: min(x, self.maxduration), duracode)
+        return np.array(notecode), np.array(duracode)
 
     def decode(self, notecode, duracode):
         if isinstance(duracode, int):
@@ -218,7 +253,8 @@ class MeasureSplitCoder(object):
 
 if __name__ == '__main__':
     # coder = MultiHotCoder()
-    coder = NoteDurationCoder()
+    # coder = NoteDurationCoder()
+    coder = MeasureSplitCoder()
     res = coder.encode(ms.converter.parse('/home/ly/projects/deepsymphony/datasets/easymusicnotes/level11/the-penny-theme-victor-m-barba-movies-piano-level-11.mid'))
     print res
 

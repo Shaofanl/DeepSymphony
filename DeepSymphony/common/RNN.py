@@ -5,8 +5,10 @@ import tensorflow.contrib.rnn as rnn
 def rnn_wrapper(inputs,
                 cells,
                 init_state=None,
+                batch_size=None,
                 basic_cell=rnn.BasicLSTMCell):
-    batch_size = inputs.shape[0]
+    if batch_size is None:
+        batch_size = tf.shape(inputs)[0]
 
     cells = rnn.MultiRNNCell(
         [basic_cell(c) for c in cells]

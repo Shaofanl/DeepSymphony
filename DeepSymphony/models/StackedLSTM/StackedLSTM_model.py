@@ -1,3 +1,5 @@
+# !!!!!!!! code in this file is not optimized.
+# check CondStackedLSTM for latest structure.
 from DeepSymphony.common.HParam import HParam
 from DeepSymphony.common.RNN import rnn_wrapper
 
