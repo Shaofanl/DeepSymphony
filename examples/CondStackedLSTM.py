@@ -9,82 +9,117 @@ from DeepSymphony.utils.Player import ExampleCoderPlayer
 
 import mido
 import serial
+import sys
+
+
+def process(params):
+    ind, l, r = params
+    # [l, r)
+    song = data[ind]
+    sample_range = 50
+    sys.stdout.flush()
+    length = len(song)
+    ci = np.zeros((r-l, hparam.cond_len))
+
+    for ind in xrange(l, r):
+        start = max(0, min(ind-sample_range/2, length-sample_range))
+        xi = song[start: start+sample_range]
+
+        notes = xi[xi < 128]
+        if len(notes):
+            # mean pitch
+            #   original: 13 bits (0~12)
+            #   rescaled: only take (4~8)
+            mean_pitch = np.mean(notes)
+            mean_pitch = np.clip(mean_pitch/10., 5., 9.)
+            mean_pitch = int(np.round((mean_pitch-5.)/4.*9.))
+            ci[ind-l, mean_pitch] = 1.0
+
+            # histogram - 12 bits (0~11)
+            hist = np.bincount(notes % 12,
+                               minlength=12).astype('float')
+            hist /= hist.sum()
+            ci[ind-l, 10+10:] = hist
+
+        # density
+        #   original: 11 bits (0~10)
+        #   rescaled: only take (3~5)
+
+        # density 1:
+        # density = float(len(notes)) / sample_range
+        # density = np.clip(density*10., 0., 2.5)
+        # density = int(np.round((density-0.)/2.5 * 9.))
+
+        # density 2:
+        rest = xi[(256 < xi)*(xi < 356)] - 256
+        density = rest.sum()
+        density = np.clip(density, 30., 150.)
+        density = int(np.round((density-30.)/120. * 9.))
+        ci[ind-l, 10+density] = 1.0
+        # print mean_pitch, density, hist
+    return ci
 
 
 if __name__ == '__main__':
-    # mode = 'train'
-    mode = 'generate'
-    mode = 'jevois'
+    mode = 'train'
+    # mode = 'generate'
+    # mode = 'jevois'
 
     np.random.seed(32)
 
     coder = ExampleCoder(return_onehot=False)
     hparam = CondStackedLSTMHParam(
         # basic
-        cells=[512, 512, 512],
-        embed_dim=300,
+        cells=[64],  # [512, 512, 512],
+        embed_dim=128,
         input_dim=coder.EVENT_COUNT,
         output_dim=coder.EVENT_COUNT,
         cond_len=32,
         # training
-        batch_size=64,
-        timesteps=30,
-        iterations=1000,
-        learning_rate=5e-4,
+        batch_size=32,
+        timesteps=20,
+        iterations=500,
+        learning_rate=1e-4,
         continued=True,
         overwrite_workdir=True,
-        clip_norm=3.0,
+        clip_norm=1.0,
         # generate
         gen_len=500,
         temperature=1.0,
     )
     model = CondStackedLSTM(hparam)
 
+    global data
     try:
         data = np.load('temp/cond_easy.npz')['data']
+        # data = np.load('temp/cond_e-comp.npz')['data']
     except:
-        data = np.array(map_dir(lambda fn: coder.encode(get_midi(fn)),
-                                './datasets/easymusicnotes'))
-        np.savez('temp/cond_easy.npz', data=data)
+        # data = np.array(map_dir(lambda fn: coder.encode(get_midi(fn)),
+        #                         './datasets/easymusicnotes'))
+        # np.savez('temp/cond_easy.npz', data=data)
+        # data = np.array(map_dir(lambda fn: coder.encode(get_midi(fn)),
+        #                         './datasets/e-comp/'))
+        # np.savez('temp/cond_e-comp.npz', data=data)
+        pass
+    data = [data[2]]
 
     if mode == 'train':
+        from multiprocessing import Pool
+        pool = Pool(8)
+
         def fetch_data(batch_size):
             x, y, c = [], [], []
+            indices = []
             for _ in range(batch_size):
                 ind = np.random.randint(len(data))
                 start = np.random.randint(data[ind].shape[0] -
                                           hparam.timesteps-1)
                 xi = data[ind][start:start+hparam.timesteps]
                 yi = data[ind][start+1:start+hparam.timesteps+1]
+                indices.append((ind, start+1, start+hparam.timesteps+1))
                 x.append(xi)
                 y.append(yi)
-
-                # calc conditional
-                ci = np.zeros((1, hparam.cond_len))
-                notes = xi[xi < 128]
-                # mean pitch
-                #   original: 13 bits (0~12)
-                #   rescaled: only take (4~8)
-                mean_pitch = np.mean(notes)
-                mean_pitch = np.clip(mean_pitch/10., 4., 8.)
-                mean_pitch = int(np.round((mean_pitch-4.)/4.*9.))
-                # density
-                #   original: 11 bits (0~10)
-                #   rescaled: only take (3~5)
-                density = float(len(notes)) / hparam.timesteps
-                density = np.clip(density*10., 2., 5.)
-                density = int(np.round((density-2.)/3. * 9.))
-                # histogram - 12 bits (0~11)
-                hist = np.bincount(notes % 12, minlength=12).astype('float')
-                hist /= hist.sum()
-                # fill the blank
-                ci[0, mean_pitch] = 1.0
-                ci[0, 10+density] = 1.0
-                ci[0, 10+10:] = hist
-                # print mean_pitch, density, hist
-                ci = np.tile(ci, (hparam.timesteps, 1))
-
-                c.append(ci)
+            c = pool.map(process, indices)
             x, y, c = np.array(x), np.array(y), np.array(c)
             return x, y, c
 
@@ -98,12 +133,14 @@ if __name__ == '__main__':
 
         def cond_generator():
             cond = np.zeros((hparam.cond_len, ))
-            cond[5] = 1.0   # 0~9
-            cond[17] = 1.0  # 13~17
-            cond[[20, 22, 24, 25, 27, 29, 31]] = 1.0  # C-major
+            cond[0] = 1.0   # 0~9
+            cond[15] = 1.0  # 13~17
+            cond[[20, 22, 24, 25, 27, 29, 31]] = 1./7.  # C-major
             while True:
                 yield cond
 
+        hparam.temperature = 1.0
+        hparam.gen_len = 1000
         result = model.generate(
             conds=cond_generator(),
             sample=sample,
@@ -111,6 +148,7 @@ if __name__ == '__main__':
         )
         result = coder.decode(result)
         save_midi('example.mid', result)
+        save_midi('truth.mid', coder.decode(data[0]))
 
     elif mode == 'jevois':
         port_name = mido.get_output_names()[0]
@@ -118,8 +156,8 @@ if __name__ == '__main__':
         player = ExampleCoderPlayer(outport_name=port_name,
                                     decoder=coder,
                                     max_sustain=4.,
-                                    speed=1.5)
-        ser = serial.Serial('/dev/ttyACM0', timeout=0.01)
+                                    speed=1.0)
+        ser = serial.Serial('/dev/ttyACM0', timeout=0.1)
 
         def sample(output):
             ind = np.random.choice(hparam.output_dim,
@@ -128,12 +166,15 @@ if __name__ == '__main__':
             player.play(ind)
             return ind
 
-        def cond_generator():
-            last_cond = np.zeros((hparam.cond_len, ))
+        from multiprocessing import Process, Array
+        from time import sleep
+
+        def cond_generator(val):
             while True:
-                cond = np.zeros((hparam.cond_len, ))
-                cond[[20, 22, 24, 25, 27, 29, 31]] = 1./7.  # C-major
+                sleep(0.1)
                 try:
+                    cond = np.zeros((hparam.cond_len, ))
+                    cond[[20, 22, 24, 25, 27, 29, 31]] = 1./7.  # C-major
                     ser.reset_input_buffer()
                     ser.write('fetch\n')
                     res = ser.readline().strip().split('|')
@@ -143,14 +184,19 @@ if __name__ == '__main__':
                     cond[mean_pitch] = 1.0   # 0~9
                     cond[density] = 1.0  # 13~17
                     print 'pitch:', mean_pitch, 'density:', density
-                    last_cond = cond.copy()
                 except:
                     print 'miss'
-                    cond = last_cond
-                yield cond
+                val[:] = cond.tolist()[:]
+        val = Array('f', range(hparam.cond_len))
+        proc = Process(target=cond_generator, args=(val,))
+        proc.start()
+
+        def cond_return():
+            while True:
+                yield np.array(val[:])
 
         result = model.generate(
-            conds=cond_generator(),
+            conds=cond_return(),
             sample=sample,
             length=50000,
         )
