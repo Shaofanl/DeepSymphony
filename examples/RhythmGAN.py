@@ -16,17 +16,17 @@ if __name__ == '__main__':
 
     hparam = SeqGANHParam(
         # basic
-        cells=[64, 128],
+        cells=[64, 32],
         timesteps=128,
-        code_dim=100,
+        code_dim=200,
         vocab_size=128,
         basic_cell=rnn.GRUCell,
         # hparam
         D_lr=1e-4,
         D_boost=0,
         G_lr=1e-3,
-        G_k=20,
-        G_clipnorm=10.0,
+        G_k=5,
+        G_clipnorm=1.0,
         # train
         batch_size=25,
         continued=False,
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     coder = NoteDurationCoder(normalize_key='C5', first_voice=True)
 
     try:
-        raise Exception
+        # raise Exception
         data = np.load('temp/easy.npz')['data']
     except:
         data = np.array(map_dir(

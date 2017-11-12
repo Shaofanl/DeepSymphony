@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     mode = 'train'
     mode = 'rec'
-    mode = 'random_walk'  # can use different timestep when generating
+    # mode = 'random_walk'  # can use different timestep when generating
 
     hparam = ContinuousSeqAEHParam(batch_size=32,
                                    encoder_cells=[512, 32],

@@ -102,16 +102,30 @@ class NoteDurationCoder(object):
 
 
 class MultiHotCoder(object):
-    def __init__(self, keys=128, resolution=0.25):
+    def __init__(self,
+                 normalize_key=None,  # the normalize target
+                 keys=128,
+                 resolution=0.25):
         self.keys = keys
         self.resolution = resolution
+        self.normalize_key = normalize_key
 
     def encode(self, score,):
         length = int(score.duration.quarterLength/self.resolution)
 
         voices = []
+
+        if self.normalize_key:
+            pitches = score.analyze('key').pitches
+            interval = ms.interval.Interval(
+                pitches[0], ms.pitch.Pitch(self.normalize_key)
+            )
+            score = score.transpose(interval)
+            print 'transpose key to', score.analyze('key')
+
         for stream in score.parts:
-            if 'Piano' not in stream.partName:
+            if not isinstance(stream.partName, str) or \
+               'Piano' not in stream.partName:
                 continue
 
             for comp in stream:
@@ -134,8 +148,11 @@ class MultiHotCoder(object):
         voices = np.array(voices)
         return voices
 
-    def decode(self, codes):
+    def decode(self, codes, speed=1.0):
         # TODO: check correctness
+        ratio = self.resolution/speed
+        if codes.ndim == 2:
+            codes = np.expand_dims(codes, 0)
         nb_voices = codes.shape[0]
         stream = ms.stream.Stream()
         for vind in range(nb_voices):
@@ -154,8 +171,8 @@ class MultiHotCoder(object):
                         if starts[nind] != -1:
                             note = ms.note.Note(nind)
                             note.duration = \
-                                ms.duration.Duration(tind-starts[nind])
-                            voice.insert(starts[nind], note)
+                                ms.duration.Duration(ratio*(tind-starts[nind]))
+                            voice.insert(starts[nind]*ratio, note)
                             starts[nind] = -1
             stream.append(voice)
         return stream

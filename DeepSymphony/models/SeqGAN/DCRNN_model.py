@@ -1,5 +1,10 @@
+# sequential GAN with Deconvolutional RNN
+#  RNN1              RNN1
+#   o1    o1    o1    o2    o2   o2
+#  RNN2  RNN2  RNN2  RNN2  RNN2  RNN2
+#   o1    o2    o3    o4    o5   o6
+
 from DeepSymphony.common.HParam import HParam
-from DeepSymphony.common.Helpers import GreedyEmbeddingHelper
 from DeepSymphony.common.resnet import ResNetBuilder
 
 import os
@@ -7,22 +12,33 @@ import shutil
 import numpy as np
 
 import tensorflow as tf
-from tensorflow.contrib import rnn, layers, slim
+from tensorflow.contrib import rnn, slim, layers
 
 
-class SeqGANHParam(HParam):
+def safe_log(x):
+    epsilon = 1e-6
+    return tf.log(tf.clip_by_value(x, epsilon, 1-epsilon))
+
+
+def lrelu(x):
+    return tf.maximum(0.2*x, x)
+
+
+class DCRNNHParam(HParam):
     # basic
-    cells = [256]
+    cells = [256, 128, 128]
+    repeats = [8, 2, 1]
     basic_cell = rnn.GRUCell
     embed_dim = 500
     code_dim = 200
+    trainable_gen = ['generator']
     # training
     D_lr = 1e-5
     G_lr = 1e-5
     batch_size = 32
     iterations = 300
     # logs
-    workdir = './temp/SeqGAN/'
+    workdir = './temp/DCRNN/'
     tensorboard_dir = 'tensorboard/'
     overwrite_workdir = False
     # debug
@@ -31,16 +47,17 @@ class SeqGANHParam(HParam):
     def __init__(self, **kwargs):
         self.register_check('timesteps')
         self.register_check('vocab_size')
+        self.register_check('onehot')
 
-        super(SeqGANHParam, self).__init__(**kwargs)
+        super(DCRNNHParam, self).__init__(**kwargs)
 
 
-class SeqGAN(object):
+class DCRNN(object):
     def __init__(self, hparam):
         self.built = False
         if not hasattr(hparam, 'weight_path'):
             hparam.weight_path = \
-                os.path.join(hparam.workdir, 'SeqGAN.ckpt')
+                os.path.join(hparam.workdir, 'DCRNN.ckpt')
         self.hparam = hparam
         # self.start_token = hparam.vocab_size
         # self.eos_token = hparam.vocab_size+1
@@ -60,8 +77,6 @@ class SeqGAN(object):
 
         # generator
         with tf.variable_scope('generator'):
-            cells = rnn.MultiRNNCell([hparam.basic_cell(c)
-                                      for c in hparam.cells])
             # play with code
             # code_with_timestep = tf.concat(
             #     [
@@ -71,56 +86,109 @@ class SeqGAN(object):
             #                 (bs, 1, 1)),
             #     ], -1
             # )
+
+            step = int(hparam.timesteps / np.prod(hparam.repeats))
             code_with_timestep = tf.concat(
                 [
                     tf.tile(tf.expand_dims(code, 1),
-                            (1, hparam.timesteps, 1)),
+                            (1, step, 1)),
                     tf.tile(tf.expand_dims(tf.expand_dims(tf.lin_space(
-                        0., 1., hparam.timesteps), 0), -1),
+                        0., 1., step), 0), -1),
                             (bs, 1, 1)),
                 ], -1
             )
-            outputs, states = tf.nn.dynamic_rnn(
-                cells,
-                code_with_timestep,
-                dtype=tf.float32,
-            )
-            fake_seq_img = tf.nn.softmax(layers.linear(
-               outputs[:, :, :], hparam.vocab_size), -1)
-            # fake_seq_img = outputs
-            # fake_seq_img = tf.nn.softmax(fake_seq_img)
-            fake_seq = tf.argmax(fake_seq_img, -1)
+            outputs = [code_with_timestep]
+            ind = 0
+            for repeat, cell_size in zip(hparam.repeats, hparam.cells):
+                ind += 1
+                with tf.variable_scope('layer{}'.format(ind)):
+                    cell = hparam.basic_cell(cell_size)
+
+                    output, state = tf.nn.dynamic_rnn(
+                        cell,
+                        outputs[-1],
+                        dtype=tf.float32,
+                    )
+                    # output = output * 2
+                    step *= repeat
+                    output = tf.reshape(
+                        tf.tile(output, (1, 1, repeat)),
+                        [bs, step, cell_size])
+                    outputs.append(output)
+            outputs[-1] = outputs[-1][:, :hparam.timesteps, :]
+            for o in outputs:
+                print o
+
+            with tf.variable_scope('decision'):
+                fake_seq_img = outputs[-1]
+                fake_seq_img = layers.linear(fake_seq_img, hparam.vocab_size)
+                outputs.append(fake_seq_img)
+                fake_seq_img = tf.nn.sigmoid(fake_seq_img)
+                # fake_seq_img = tf.nn.softmax(fake_seq_img, -1)
+                outputs.append(fake_seq_img)
+                fake_seq = tf.argmax(fake_seq_img, -1)
 
         # discriminator
         def dis(seq_img, bn_scope, reuse=False):
             with tf.variable_scope('discriminator', reuse=reuse):
                 # x = tf.nn.embedding_lookup(embeddings, seq)
                 x = tf.expand_dims(seq_img, -1)
-                x = ResNetBuilder(dis_train,
-                                  bn_scopes=['fake', 'real'],
-                                  bn_scope=bn_scope).\
-                    resnet(x, structure=[2, 2, 2, 2], filters=4, nb_class=1)
-                x = tf.nn.sigmoid(x)
+                # x = ResNetBuilder(dis_train,
+                #                   bn_scopes=['fake', 'real'],
+                #                   bn_scope=bn_scope).\
+                #     resnet(x, structure=[2, 2, 2, 2], filters=8, nb_class=1)
+                fs = 32
+                #  note axis
+                x = lrelu(slim.conv2d(x, fs*1, [5, 5], stride=2))
+                x = lrelu(slim.conv2d(x, fs*2, [5, 5], stride=2))
+                x = lrelu(slim.conv2d(x, fs*4, [5, 5], stride=2))
+                x = lrelu(slim.conv2d(x, fs*8, [5, 5], stride=2))
+                x = slim.flatten(x)
+                x = slim.linear(x, 1)
+                # x = tf.nn.sigmoid(x)
             return x
         # opt
         # problematic with the reuse bn
+        # fake_seq_img = tf.where(
+        #     tf.greater(fake_seq_img, 0.5),
+        #     fake_seq_img,
+        #     tf.zeros_like(fake_seq_img))
         fake_dis_pred = dis(fake_seq_img, bn_scope='fake')
         real_dis_pred = dis(real_seq_img, bn_scope='real', reuse=True)
 
-        G_loss = tf.reduce_mean(-tf.log(fake_dis_pred))
-        D_loss = tf.reduce_mean(-tf.log(real_dis_pred)) +\
-            tf.reduce_mean(-tf.log(1-fake_dis_pred))
+        # traditional GAN loss
+        # G_loss = tf.reduce_mean(-safe_log(fake_dis_pred))
+        # D_loss = tf.reduce_mean(-safe_log(real_dis_pred)) +\
+        #     tf.reduce_mean(-safe_log(1-fake_dis_pred))
+        # IWGAN
+        epsilon = tf.random_uniform(
+            minval=0, maxval=1.0, shape=tf.shape(real_seq_img))
+        intepolation = fake_seq_img*epsilon+real_seq_img*(1.0-epsilon)
+        inte_dis_pred = dis(intepolation, bn_scope='intepolation', reuse=True)
+        grad = tf.gradients(inte_dis_pred, intepolation)[0]
+        grad = tf.reshape(grad, (-1, hparam.timesteps*hparam.vocab_size))
+        D_loss = tf.reduce_mean(fake_dis_pred) - \
+            tf.reduce_mean(real_dis_pred) + \
+            10*tf.reduce_mean(tf.square(tf.norm(grad, ord=2, axis=1)-1))
+        G_loss = -tf.reduce_mean(fake_dis_pred)
 
         G_opt = tf.train.AdamOptimizer(learning_rate=hparam.G_lr,
                                        beta1=0.5, beta2=0.9)
+        # D_opt = tf.train.GradientDescentOptimizer(learning_rate=hparam.D_lr)
         D_opt = tf.train.AdamOptimizer(learning_rate=hparam.D_lr,
                                        beta1=0.5, beta2=0.9)
         D_iter = tf.Variable(0, name='D_iter')
         G_iter = tf.Variable(0, name='G_iter')
+        trainable_gen_var = reduce(
+            lambda x, y: x+y,
+            [tf.get_collection(
+                tf.GraphKeys.TRAINABLE_VARIABLES, ele)
+                for ele in hparam.trainable_gen],
+            []
+        )
         G_train_op = slim.learning.create_train_op(
             G_loss, G_opt,
-            variables_to_train=tf.get_collection(
-                tf.GraphKeys.TRAINABLE_VARIABLES, "generator"),
+            variables_to_train=trainable_gen_var,
             global_step=G_iter,
             clip_gradient_norm=hparam.G_clipnorm
         )
@@ -137,6 +205,7 @@ class SeqGAN(object):
         # input
         self.code = code
         self.real_seq = real_seq
+        self.real_seq_img = real_seq_img
         # summary
         self.summary_fake_img = tf.summary.image(
             'fake_img', tf.expand_dims(fake_seq_img, -1))
@@ -148,6 +217,8 @@ class SeqGAN(object):
             'fake_dis_pred', tf.reduce_mean(fake_dis_pred))
         self.summary_real_dis_pred = tf.summary.scalar(
             'real_dis_pred', tf.reduce_mean(real_dis_pred))
+        self.gen_outputs = outputs
+
         # debug
         self.fake_seq_img = fake_seq_img
         # train
@@ -159,6 +230,50 @@ class SeqGAN(object):
         # output
         self.fake_seq = fake_seq
         self.built = True
+
+    @property
+    def major_params(self):
+        return \
+                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                  'generator') +\
+                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                  'discriminator') +\
+                [self.iter_step]
+
+    @property
+    def gen_params(self):
+        return \
+                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                  'generator')
+
+    def generate(self, code, img=False):
+        hparam = self.hparam
+        with tf.Session() as sess:
+            saver = tf.train.Saver(self.gen_params)
+            saver.restore(sess, hparam.weight_path)
+
+            tensor = self.fake_seq_img if img else self.fake_seq
+
+            seq = sess.run(tensor,
+                           feed_dict={self.code: code})
+            return seq
+
+    def analyze(self, sample):
+        hparam = self.hparam
+        with tf.Session() as sess:
+            saver = tf.train.Saver(self.major_params)
+            saver.restore(sess, hparam.weight_path)
+
+            code = sample(hparam.batch_size)
+
+            outputs = sess.run(self.gen_outputs,
+                               feed_dict={self.code: code})
+            outputs[0] = outputs[0][:, :, :-1]
+
+            print np.var(code, 0).mean()
+            for o in outputs:
+                o = o.reshape(o.shape[0], -1)
+                print np.var(o, 0).mean()
 
     def train(self, sample, fetch_data, continued=None):
         if self.built is False:
@@ -178,13 +293,18 @@ class SeqGAN(object):
             train_writer = tf.summary.FileWriter(
                 os.path.join(hparam.workdir, hparam.tensorboard_dir),
                 sess.graph)
-            saver = tf.train.Saver()
+            saver = tf.train.Saver(
+                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                  'generator') +
+                tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                  'discriminator') +
+                [self.iter_step]
+            )
 
+            sess.run(tf.global_variables_initializer())
             if continued:
                 print 'restoring'
                 saver.restore(sess, hparam.weight_path)
-            else:
-                sess.run(tf.global_variables_initializer())
 
             vis_code = sample(hparam.batch_size)
             history = sess.run(self.fake_seq_img,
@@ -199,6 +319,8 @@ class SeqGAN(object):
 
                 code = sample(hparam.batch_size)
                 real_seq = fetch_data(hparam.batch_size)
+                real_seq_tensor = self.real_seq if hparam.onehot else\
+                    self.real_seq_img
 
                 new_fake_seq_img = sess.run(self.fake_seq_img,
                                             feed_dict={self.code: code})
@@ -214,12 +336,27 @@ class SeqGAN(object):
                     sess.run([self.summary_D_loss,
                               self.summary_real_img,
                               self.D_train_op],
-                             feed_dict={self.real_seq: real_seq,
+                             feed_dict={real_seq_tensor: real_seq,
                                         self.fake_seq_img: history[train_ind],
                                         self.dis_train: True}
                              )
                 train_writer.add_summary(summary_D_loss, i)
+
+                summary_fake_dis_pred, summary_real_dis_pred = \
+                    sess.run([self.summary_fake_dis_pred,
+                              self.summary_real_dis_pred],
+                             feed_dict={real_seq_tensor: real_seq,
+                                        self.fake_seq_img: history[train_ind],
+                                        self.dis_train: False})
+                train_writer.add_summary(summary_fake_dis_pred, i)
+                train_writer.add_summary(summary_real_dis_pred, i)
+
+                summary_fake_img = \
+                    sess.run(self.summary_fake_img,
+                             feed_dict={self.code: vis_code})
+
                 train_writer.add_summary(summary_real_img, i)
+                train_writer.add_summary(summary_fake_img, i)
 
                 if i < hparam.D_boost:
                     continue
@@ -231,22 +368,8 @@ class SeqGAN(object):
                                  feed_dict={self.code: code,
                                             self.dis_train: False})
                     # problematic with the reuse bn
-                    train_writer.add_summary(summary_G_loss, i)
+                train_writer.add_summary(summary_G_loss, i)
 
-                summary_fake_img = \
-                    sess.run(self.summary_fake_img,
-                             feed_dict={self.code: vis_code})
-                train_writer.add_summary(summary_fake_img, i)
-
-                summary_fake_dis_pred, summary_real_dis_pred = \
-                    sess.run([self.summary_fake_dis_pred,
-                              self.summary_real_dis_pred],
-                             feed_dict={self.real_seq: real_seq,
-                                        self.fake_seq_img: history[train_ind],
-                                        self.dis_train: False})
-                train_writer.add_summary(summary_fake_dis_pred, i)
-                train_writer.add_summary(summary_real_dis_pred, i)
-
+                if i % 200:
+                    saver.save(sess, hparam.weight_path)
             saver.save(sess, hparam.weight_path)
-
-
