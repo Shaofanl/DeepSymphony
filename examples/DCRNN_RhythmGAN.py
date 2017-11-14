@@ -23,7 +23,7 @@ if __name__ == '__main__':
         cells=[64, 32],  # [64, 32, 32],
         repeats=[1, 1],  # [8, 2, 1],
         last_bidirectional=False,
-        timesteps=256,  # 128 if mode == 'train' else 512,
+        timesteps=256 if mode == 'train' else 1024,
         code_dim=50,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
@@ -121,12 +121,12 @@ if __name__ == '__main__':
 
     if mode == 'generate':
         seed = np.random.randint(1e+9)
-        # seed = 118727205
+        seed = 292251089
         print 'seed', seed
         np.random.seed(seed)
         song = model.generate(sample(1), img=True)[0]
         print song[song.nonzero()].mean()
-        final = song > -0.5
+        final = song > -0.3
         coder.decode(final, speed=1.).write('midi', 'example.mid')
 
         import matplotlib.pyplot as plt
