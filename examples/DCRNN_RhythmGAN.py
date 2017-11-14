@@ -20,23 +20,26 @@ if __name__ == '__main__':
 
     hparam = DCRNNHParam(
         # basic
-        cells=[64, 32],
-        repeats=[8, 2],
-        timesteps=512,
-        code_dim=100,
+        cells=[64, 32],  # [64, 32, 32],
+        repeats=[1, 1],  # [8, 2, 1],
+        last_bidirectional=False,
+        timesteps=256,  # 128 if mode == 'train' else 512,
+        code_dim=50,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
         onehot=False,
+        linspace_code=True,
+        timestep_pad=False,
         # hparam
         trainable_gen=['generator'],
         D_lr=1e-3,
-        G_lr=1e-4,
+        G_lr=1e-4,  # change to 1e-4 when finetuning
         G_k=5,
         D_boost=0,
-        G_clipnorm=1.0,
-        # train
+        G_clipnorm=None,  # 1.0,
+        # traini
         batch_size=32,
-        continued=True,
+        continued=False,
         overwrite_workdir=True,
         iterations=20000,
         workdir='./temp/DCRNN_RhythmGAN/'
@@ -46,12 +49,26 @@ if __name__ == '__main__':
     # coder = NoteDurationCoder(normalize_key='C5', first_voice=False)
     coder = MultiHotCoder(normalize_key='C5')
 
-    def sample(batch_size):
-        # return np.random.normal(loc=0.,
-        #                         scale=1.,
-        return np.random.uniform(-1., +1.,
-                                 size=(hparam.batch_size,
-                                       hparam.code_dim))
+    if hparam.linspace_code:
+        def sample(batch_size):
+            code_s = np.random.uniform(-1., +1.,
+                                       size=(batch_size,
+                                             hparam.code_dim))
+            code_e = np.random.uniform(-1., +1.,
+                                       size=(batch_size,
+                                             hparam.code_dim))
+            res = np.zeros((batch_size,
+                            hparam.timesteps,
+                            hparam.code_dim))
+            interpolation = np.linspace(0, 1, hparam.timesteps)[None, :, None]
+            res[:, :, :] = code_s[:, None, :] * interpolation + \
+                code_e[:, None, :] * (1-interpolation)
+            return res
+    else:
+        def sample(batch_size):
+            return np.random.uniform(-1., +1.,
+                                     size=(batch_size,
+                                           hparam.code_dim))
 
     try:
         data = np.load('temp/easy.npz')['data']
@@ -63,6 +80,13 @@ if __name__ == '__main__':
 
     print(len(data), map(lambda x: len(x), data))
     data = filter(lambda x: len(x) > 0 and x.shape[1] > hparam.timesteps, data)
+    # import matplotlib.pyplot as plt
+    # for d in data:
+    #     print d.shape
+    #     for v in d:
+    #         fig, ax = plt.subplots()
+    #         ax.imshow(v)
+    #     plt.show()
     data = map(lambda x: x.sum(0), data)
     print(len(data), map(lambda x: len(x), data))
 
@@ -78,8 +102,11 @@ if __name__ == '__main__':
                 start = np.random.randint(dataset[ind].shape[0] -
                                           hparam.timesteps-1)
                 seq = dataset[ind][start:start+hparam.timesteps]
+                # seq[:, :60] = 0
                 seqs.append(seq)
-            return np.array(seqs)
+            seqs = np.array(seqs)
+            seqs = seqs*2-1
+            return seqs
         return fetch_data
 
     fetch_train_data = fetch_data_g(train_data)
@@ -93,15 +120,23 @@ if __name__ == '__main__':
         model.analyze(sample)
 
     if mode == 'generate':
+        seed = np.random.randint(1e+9)
+        # seed = 118727205
+        print 'seed', seed
+        np.random.seed(seed)
         song = model.generate(sample(1), img=True)[0]
-        song = song>0.5
-        coder.decode(song, speed=1.).write('midi', 'example.mid')
+        print song[song.nonzero()].mean()
+        final = song > -0.5
+        coder.decode(final, speed=1.).write('midi', 'example.mid')
 
         import matplotlib.pyplot as plt
-        plt.imshow(song)
-        plt.colorbar()
-        plt.show()
+        plt.subplot(211)
+        plt.imshow(song.T[::-1, :])
+        plt.subplot(212)
+        plt.imshow(final.T[::-1, :])
+        # plt.colorbar(orientation='horizontal')
         plt.savefig('example.png')
+        plt.show()
 
         # t, p = (song > 0.80).nonzero()
         # song = []

@@ -32,6 +32,7 @@ class DCRNNHParam(HParam):
     embed_dim = 500
     code_dim = 200
     trainable_gen = ['generator']
+    last_bidirectional = False
     # training
     D_lr = 1e-5
     G_lr = 1e-5
@@ -65,9 +66,15 @@ class DCRNN(object):
     def build(self):
         hparam = self.hparam
 
-        code = tf.placeholder("float32", [None,
-                                          hparam.code_dim],
-                              name='code')
+        if hparam.linspace_code:
+            code = tf.placeholder("float32", [None,
+                                              hparam.timesteps,
+                                              hparam.code_dim],
+                                  name='code')
+        else:
+            code = tf.placeholder("float32", [None,
+                                              hparam.code_dim],
+                                  name='code')
         real_seq = tf.placeholder("int32", [None,
                                             hparam.timesteps],
                                   name='real_seq')
@@ -78,42 +85,49 @@ class DCRNN(object):
         # generator
         with tf.variable_scope('generator'):
             # play with code
-            # code_with_timestep = tf.concat(
-            #     [
-            #         tf.tile(tf.expand_dims(code, 1),
-            #                 (1, hparam.timesteps, 1)),
-            #         tf.tile(tf.expand_dims(tf.eye(hparam.timesteps), 0),
-            #                 (bs, 1, 1)),
-            #     ], -1
-            # )
 
             step = int(hparam.timesteps / np.prod(hparam.repeats))
-            code_with_timestep = tf.concat(
-                [
-                    tf.tile(tf.expand_dims(code, 1),
-                            (1, step, 1)),
-                    tf.tile(tf.expand_dims(tf.expand_dims(tf.lin_space(
-                        0., 1., step), 0), -1),
+            first_input = code if hparam.linspace_code else \
+                tf.tile(tf.expand_dims(code, 1), (1, step, 1))
+            if hparam.timestep_pad:
+                first_input = tf.concat(
+                    [
+                        first_input,
+                        tf.tile(tf.expand_dims(tf.expand_dims(tf.lin_space(
+                            0., 1., step), 0), -1),
                             (bs, 1, 1)),
-                ], -1
-            )
-            outputs = [code_with_timestep]
+                    ], -1
+                )
+            outputs = [first_input]
             ind = 0
             for repeat, cell_size in zip(hparam.repeats, hparam.cells):
                 ind += 1
                 with tf.variable_scope('layer{}'.format(ind)):
-                    cell = hparam.basic_cell(cell_size)
-
-                    output, state = tf.nn.dynamic_rnn(
-                        cell,
-                        outputs[-1],
-                        dtype=tf.float32,
-                    )
+                    if ind == len(hparam.repeats) and \
+                       hparam.last_bidirectional:
+                        assert(repeat == 1)
+                        fw_cell = hparam.basic_cell(cell_size)
+                        bw_cell = hparam.basic_cell(cell_size)
+                        output, state = tf.nn.bidirectional_dynamic_rnn(
+                            fw_cell, bw_cell,
+                            outputs[-1],
+                            dtype=tf.float32,
+                        )
+                        output = tf.concat(output, 2)
+                        cell_size *= 2
+                    else:
+                        cell = hparam.basic_cell(cell_size)
+                        output, state = tf.nn.dynamic_rnn(
+                            cell,
+                            outputs[-1],
+                            dtype=tf.float32,
+                        )
                     # output = output * 2
-                    step *= repeat
-                    output = tf.reshape(
-                        tf.tile(output, (1, 1, repeat)),
-                        [bs, step, cell_size])
+                    if repeat != 1:
+                        step *= repeat
+                        output = tf.reshape(
+                            tf.tile(output, (1, 1, repeat)),
+                            [bs, step, cell_size])
                     outputs.append(output)
             outputs[-1] = outputs[-1][:, :hparam.timesteps, :]
             for o in outputs:
@@ -123,7 +137,7 @@ class DCRNN(object):
                 fake_seq_img = outputs[-1]
                 fake_seq_img = layers.linear(fake_seq_img, hparam.vocab_size)
                 outputs.append(fake_seq_img)
-                fake_seq_img = tf.nn.sigmoid(fake_seq_img)
+                fake_seq_img = tf.tanh(fake_seq_img)
                 # fake_seq_img = tf.nn.softmax(fake_seq_img, -1)
                 outputs.append(fake_seq_img)
                 fake_seq = tf.argmax(fake_seq_img, -1)
@@ -137,12 +151,13 @@ class DCRNN(object):
                 #                   bn_scopes=['fake', 'real'],
                 #                   bn_scope=bn_scope).\
                 #     resnet(x, structure=[2, 2, 2, 2], filters=8, nb_class=1)
-                fs = 32
+
                 #  note axis
+                fs = 32
                 x = lrelu(slim.conv2d(x, fs*1, [5, 5], stride=2))
                 x = lrelu(slim.conv2d(x, fs*2, [5, 5], stride=2))
                 x = lrelu(slim.conv2d(x, fs*4, [5, 5], stride=2))
-                x = lrelu(slim.conv2d(x, fs*8, [5, 5], stride=2))
+                x = lrelu(slim.conv2d(x, fs*4, [5, 5], stride=2))
                 x = slim.flatten(x)
                 x = slim.linear(x, 1)
                 # x = tf.nn.sigmoid(x)
@@ -162,7 +177,11 @@ class DCRNN(object):
         #     tf.reduce_mean(-safe_log(1-fake_dis_pred))
         # IWGAN
         epsilon = tf.random_uniform(
-            minval=0, maxval=1.0, shape=tf.shape(real_seq_img))
+            minval=0, maxval=1.0,
+            shape=[tf.shape(real_seq_img)[0],
+                   tf.shape(real_seq_img)[1]])
+        epsilon = tf.tile(tf.expand_dims(epsilon, -1),
+                          (1, 1, tf.shape(real_seq_img)[2]))
         intepolation = fake_seq_img*epsilon+real_seq_img*(1.0-epsilon)
         inte_dis_pred = dis(intepolation, bn_scope='intepolation', reuse=True)
         grad = tf.gradients(inte_dis_pred, intepolation)[0]
@@ -171,6 +190,8 @@ class DCRNN(object):
             tf.reduce_mean(real_dis_pred) + \
             10*tf.reduce_mean(tf.square(tf.norm(grad, ord=2, axis=1)-1))
         G_loss = -tf.reduce_mean(fake_dis_pred)
+
+        fake_seq_img_grad = tf.gradients(G_loss, fake_seq_img)[0]
 
         G_opt = tf.train.AdamOptimizer(learning_rate=hparam.G_lr,
                                        beta1=0.5, beta2=0.9)
@@ -217,6 +238,8 @@ class DCRNN(object):
             'fake_dis_pred', tf.reduce_mean(fake_dis_pred))
         self.summary_real_dis_pred = tf.summary.scalar(
             'real_dis_pred', tf.reduce_mean(real_dis_pred))
+        self.summary_fake_img_grad = tf.summary.image(
+            'gradient_map', tf.expand_dims(fake_seq_img_grad, -1))
         self.gen_outputs = outputs
 
         # debug
@@ -340,6 +363,7 @@ class DCRNN(object):
                                         self.fake_seq_img: history[train_ind],
                                         self.dis_train: True}
                              )
+                train_writer.add_summary(summary_real_img, i)
                 train_writer.add_summary(summary_D_loss, i)
 
                 summary_fake_dis_pred, summary_real_dis_pred = \
@@ -351,12 +375,13 @@ class DCRNN(object):
                 train_writer.add_summary(summary_fake_dis_pred, i)
                 train_writer.add_summary(summary_real_dis_pred, i)
 
-                summary_fake_img = \
-                    sess.run(self.summary_fake_img,
+                summary_fake_img, summary_fake_img_grad = \
+                    sess.run([self.summary_fake_img,
+                              self.summary_fake_img_grad],
                              feed_dict={self.code: vis_code})
 
-                train_writer.add_summary(summary_real_img, i)
                 train_writer.add_summary(summary_fake_img, i)
+                train_writer.add_summary(summary_fake_img_grad, i)
 
                 if i < hparam.D_boost:
                     continue
@@ -370,6 +395,6 @@ class DCRNN(object):
                     # problematic with the reuse bn
                 train_writer.add_summary(summary_G_loss, i)
 
-                if i % 200:
+                if i % 100 == 0:
                     saver.save(sess, hparam.weight_path)
             saver.save(sess, hparam.weight_path)
