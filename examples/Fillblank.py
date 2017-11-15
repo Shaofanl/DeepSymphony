@@ -15,7 +15,7 @@ from tensorflow.contrib import rnn
 
 if __name__ == '__main__':
     mode = 'train'
-    # mode = 'generate'
+    mode = 'generate'
     # mode = 'analyze'
 
     hparam = DCRNNHParam(
@@ -24,51 +24,33 @@ if __name__ == '__main__':
         repeats=[1, 1],  # [8, 2, 1],
         last_bidirectional=False,
         timesteps=256 if mode == 'train' else 1024,
-        code_dim=50,
+        code_dim=128,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
         onehot=False,
-        linspace_code=True,
+        code_ndim=3,
         timestep_pad=False,
+        plus_code=False,
+        show_grad=False,
+        show_input=True,
         # hparam
         trainable_gen=['generator'],
         D_lr=1e-3,
-        G_lr=5e-4,  # change to 1e-4 when finetuning
+        G_lr=2e-4,  # change to 1e-4 when finetuning
         G_k=5,
         D_boost=0,
         G_clipnorm=None,  # 1.0,
         # traini
         batch_size=32,
-        continued=False,
+        continued=True,
         overwrite_workdir=True,
-        iterations=20000,
-        workdir='./temp/DCRNN_RhythmGAN/'
+        iterations=20,
+        workdir='./temp/Fillblank/'
     )
     model = DCRNN(hparam)
     model.build()
     # coder = NoteDurationCoder(normalize_key='C5', first_voice=False)
     coder = MultiHotCoder(normalize_key='C5')
-
-    if hparam.linspace_code:
-        def sample(batch_size):
-            code_s = np.random.uniform(-1., +1.,
-                                       size=(batch_size,
-                                             hparam.code_dim))
-            code_e = np.random.uniform(-1., +1.,
-                                       size=(batch_size,
-                                             hparam.code_dim))
-            res = np.zeros((batch_size,
-                            hparam.timesteps,
-                            hparam.code_dim))
-            interpolation = np.linspace(0, 1, hparam.timesteps)[None, :, None]
-            res[:, :, :] = code_s[:, None, :] * interpolation + \
-                code_e[:, None, :] * (1-interpolation)
-            return res
-    else:
-        def sample(batch_size):
-            return np.random.uniform(-1., +1.,
-                                     size=(batch_size,
-                                           hparam.code_dim))
 
     try:
         data = np.load('temp/easy.npz')['data']
@@ -89,6 +71,19 @@ if __name__ == '__main__':
     #     plt.show()
     data = map(lambda x: x.sum(0), data)
     print(len(data), map(lambda x: len(x), data))
+
+    def sample(batch_size, noise=1.00):
+        seqs = []
+        for _ in range(batch_size):
+            ind = np.random.randint(len(data))
+            start = np.random.randint(data[ind].shape[0] -
+                                      hparam.timesteps-1)
+            seq = data[ind][start:start+hparam.timesteps]
+            # seq[:, :60] = 0
+            seqs.append(seq)
+        seqs = np.array(seqs)
+        seqs = seqs*np.random.binomial(1, 1-noise, size=seqs.shape)
+        return seqs
 
     train_data, test_data = train_test_split(data,
                                              test_size=0.22,
@@ -121,18 +116,23 @@ if __name__ == '__main__':
 
     if mode == 'generate':
         seed = np.random.randint(1e+9)
-        seed = 292251089
+        # seed = 292251089
         print 'seed', seed
         np.random.seed(seed)
-        song = model.generate(sample(1), img=True)[0]
+        code = sample(1, noise=0.50)
+        song = model.generate(code, img=True)[0]
         print song[song.nonzero()].mean()
-        final = song > -0.3
+        final = song > -0.8
         coder.decode(final, speed=1.).write('midi', 'example.mid')
 
+        print final.nonzero()
+
         import matplotlib.pyplot as plt
-        plt.subplot(211)
+        plt.subplot(311)
+        plt.imshow(code[0].T[::-1, :])
+        plt.subplot(312)
         plt.imshow(song.T[::-1, :])
-        plt.subplot(212)
+        plt.subplot(313)
         plt.imshow(final.T[::-1, :])
         # plt.colorbar(orientation='horizontal')
         plt.savefig('example.png')

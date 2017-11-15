@@ -33,6 +33,9 @@ class DCRNNHParam(HParam):
     code_dim = 200
     trainable_gen = ['generator']
     last_bidirectional = False
+    plus_code = False
+    show_grad = False
+    show_input = False
     # training
     D_lr = 1e-5
     G_lr = 1e-5
@@ -66,12 +69,12 @@ class DCRNN(object):
     def build(self):
         hparam = self.hparam
 
-        if hparam.linspace_code:
+        if hparam.code_ndim == 3:
             code = tf.placeholder("float32", [None,
                                               hparam.timesteps,
                                               hparam.code_dim],
                                   name='code')
-        else:
+        elif hparam.code_ndim == 2:
             code = tf.placeholder("float32", [None,
                                               hparam.code_dim],
                                   name='code')
@@ -87,7 +90,7 @@ class DCRNN(object):
             # play with code
 
             step = int(hparam.timesteps / np.prod(hparam.repeats))
-            first_input = code if hparam.linspace_code else \
+            first_input = code if hparam.code_ndim == 3 else \
                 tf.tile(tf.expand_dims(code, 1), (1, step, 1))
             if hparam.timestep_pad:
                 first_input = tf.concat(
@@ -141,6 +144,9 @@ class DCRNN(object):
                 # fake_seq_img = tf.nn.softmax(fake_seq_img, -1)
                 outputs.append(fake_seq_img)
                 fake_seq = tf.argmax(fake_seq_img, -1)
+
+            if hparam.plus_code:
+                fake_seq_img = tf.clip_by_value(fake_seq_img+code, -1., +1.)
 
         # discriminator
         def dis(seq_img, bn_scope, reuse=False):
@@ -240,6 +246,8 @@ class DCRNN(object):
             'real_dis_pred', tf.reduce_mean(real_dis_pred))
         self.summary_fake_img_grad = tf.summary.image(
             'gradient_map', tf.expand_dims(fake_seq_img_grad, -1))
+        self.summary_first_input = tf.summary.image(
+            'noise', tf.expand_dims(first_input, -1))
         self.gen_outputs = outputs
 
         # debug
@@ -375,13 +383,24 @@ class DCRNN(object):
                 train_writer.add_summary(summary_fake_dis_pred, i)
                 train_writer.add_summary(summary_real_dis_pred, i)
 
-                summary_fake_img, summary_fake_img_grad = \
-                    sess.run([self.summary_fake_img,
-                              self.summary_fake_img_grad],
-                             feed_dict={self.code: vis_code})
+                if hparam.show_grad:
+                    summary_fake_img, summary_fake_img_grad = \
+                        sess.run([self.summary_fake_img,
+                                  self.summary_fake_img_grad],
+                                 feed_dict={self.code: vis_code})
+                    train_writer.add_summary(summary_fake_img, i)
+                    train_writer.add_summary(summary_fake_img_grad, i)
+                else:
+                    summary_fake_img = \
+                        sess.run(self.summary_fake_img,
+                                 feed_dict={self.code: vis_code})
+                    train_writer.add_summary(summary_fake_img, i)
 
-                train_writer.add_summary(summary_fake_img, i)
-                train_writer.add_summary(summary_fake_img_grad, i)
+                if hparam.show_input:
+                    summary_first_input = \
+                        sess.run(self.summary_first_input,
+                                 feed_dict={self.code: vis_code})
+                    train_writer.add_summary(summary_first_input, i)
 
                 if i < hparam.D_boost:
                     continue
