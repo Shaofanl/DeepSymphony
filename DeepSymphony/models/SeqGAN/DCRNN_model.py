@@ -10,6 +10,7 @@ from DeepSymphony.common.resnet import ResNetBuilder
 import os
 import shutil
 import numpy as np
+from types import GeneratorType
 
 import tensorflow as tf
 from tensorflow.contrib import rnn, slim, layers
@@ -32,7 +33,7 @@ class DCRNNHParam(HParam):
     embed_dim = 500
     code_dim = 200
     trainable_gen = ['generator']
-    last_bidirectional = False
+    bidirection = False
     plus_code = False
     show_grad = False
     show_input = False
@@ -86,6 +87,8 @@ class DCRNN(object):
         bs = tf.shape(code)[0]
 
         # generator
+        final_states = []
+        init_states = []
         with tf.variable_scope('generator'):
             # play with code
 
@@ -102,29 +105,41 @@ class DCRNN(object):
                     ], -1
                 )
             outputs = [first_input]
-            ind = 0
-            for repeat, cell_size in zip(hparam.repeats, hparam.cells):
-                ind += 1
+            for ind in range(len(hparam.cells)):
+                repeat = hparam.repeats[ind]
+                cell_size = hparam.cells[ind]
+                bi = hparam.bidirection[ind]
                 with tf.variable_scope('layer{}'.format(ind)):
-                    if ind == len(hparam.repeats) and \
-                       hparam.last_bidirectional:
-                        assert(repeat == 1)
+                    # if ind == len(hparam.repeats) and \
+                    #    hparam.last_bidirectional:
+                    if bi:
+                        # assert(repeat == 1)
                         fw_cell = hparam.basic_cell(cell_size)
                         bw_cell = hparam.basic_cell(cell_size)
+                        fw_init = fw_cell.zero_state(bs, tf.float32)
+                        bw_init = fw_cell.zero_state(bs, tf.float32)
                         output, state = tf.nn.bidirectional_dynamic_rnn(
                             fw_cell, bw_cell,
                             outputs[-1],
+                            initial_state_fw=fw_init,
+                            initial_state_bw=bw_init,
                             dtype=tf.float32,
                         )
                         output = tf.concat(output, 2)
                         cell_size *= 2
+
+                        init_states.extend([fw_init, bw_init])
+                        final_states.append(state)
                     else:
                         cell = hparam.basic_cell(cell_size)
+                        init = cell.zero_state(bs, tf.float32)
                         output, state = tf.nn.dynamic_rnn(
                             cell,
                             outputs[-1],
                             dtype=tf.float32,
                         )
+                        init_states.append(init)
+                        final_states.append(state)
                     # output = output * 2
                     if repeat != 1:
                         step *= repeat
@@ -252,6 +267,10 @@ class DCRNN(object):
 
         # debug
         self.fake_seq_img = fake_seq_img
+        self.first_input = first_input
+        self.init_states = tuple(init_states)
+        self.final_states = tuple(final_states)
+        self.bs_tensor = bs
         # train
         self.dis_train = dis_train
         self.G_train_op = G_train_op
@@ -277,17 +296,32 @@ class DCRNN(object):
                 tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
                                   'generator')
 
-    def generate(self, code, img=False):
+    def generate(self, code,
+                 real_time_callback=None,
+                 code_img=False, img=False):
         hparam = self.hparam
         with tf.Session() as sess:
-            saver = tf.train.Saver(self.gen_params)
+            saver = tf.train.Saver(self.gen_params+[self.iter_step])
             saver.restore(sess, hparam.weight_path)
+            print 'restore from iteration', self.iter_step.eval()
 
+            input_tensor = self.first_input if code_img else self.code
             tensor = self.fake_seq_img if img else self.fake_seq
 
-            seq = sess.run(tensor,
-                           feed_dict={self.code: code})
-            return seq
+            if real_time_callback is not None:
+                state = sess.run(self.init_states,
+                                 feed_dict={self.bs_tensor: 1})
+                for codei in code:
+                    seq, state = sess.run(
+                        [tensor, self.final_states],
+                        feed_dict={input_tensor: codei,
+                                   self.init_states: state,
+                                   self.bs_tensor: len(codei)})
+                    real_time_callback(seq)
+            else:
+                seq = sess.run(tensor, feed_dict={input_tensor: code,
+                                                  self.bs_tensor: len(code)})
+                return seq
 
     def analyze(self, sample):
         hparam = self.hparam
@@ -320,7 +354,8 @@ class DCRNN(object):
             os.makedirs(hparam.workdir)
             os.makedirs(os.path.join(hparam.workdir, hparam.tensorboard_dir))
 
-        with tf.Session() as sess:
+        gpu_opt = tf.GPUOptions(per_process_gpu_memory_fraction=0.80)
+        with tf.Session(config=tf.ConfigProto(gpu_options=gpu_opt)) as sess:
             train_writer = tf.summary.FileWriter(
                 os.path.join(hparam.workdir, hparam.tensorboard_dir),
                 sess.graph)

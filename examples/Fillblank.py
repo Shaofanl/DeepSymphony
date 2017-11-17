@@ -20,10 +20,10 @@ if __name__ == '__main__':
 
     hparam = DCRNNHParam(
         # basic
-        cells=[64, 32],  # [64, 32, 32],
+        cells=[32, 16],  # [64, 32, 32],
         repeats=[1, 1],  # [8, 2, 1],
-        last_bidirectional=False,
-        timesteps=256 if mode == 'train' else 1024,
+        bidirection=[True, True],
+        timesteps=128 if mode == 'train' else 1280,
         code_dim=128,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
@@ -36,21 +36,21 @@ if __name__ == '__main__':
         # hparam
         trainable_gen=['generator'],
         D_lr=1e-3,
-        G_lr=2e-4,  # change to 1e-4 when finetuning
+        G_lr=5e-4,  # change to 1e-4 when finetuning
         G_k=5,
         D_boost=0,
         G_clipnorm=None,  # 1.0,
         # traini
         batch_size=32,
-        continued=True,
+        continued=False,
         overwrite_workdir=True,
-        iterations=20,
+        iterations=10000,
         workdir='./temp/Fillblank/'
     )
     model = DCRNN(hparam)
     model.build()
     # coder = NoteDurationCoder(normalize_key='C5', first_voice=False)
-    coder = MultiHotCoder(normalize_key='C5')
+    coder = MultiHotCoder(normalize_key='C5', with_velocity=True)
 
     try:
         data = np.load('temp/easy.npz')['data']
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     data = map(lambda x: x.sum(0), data)
     print(len(data), map(lambda x: len(x), data))
 
-    def sample(batch_size, noise=1.00):
+    def sample(batch_size, noise=0.20):
         seqs = []
         for _ in range(batch_size):
             ind = np.random.randint(len(data))
@@ -119,13 +119,13 @@ if __name__ == '__main__':
         # seed = 292251089
         print 'seed', seed
         np.random.seed(seed)
-        code = sample(1, noise=0.50)
-        song = model.generate(code, img=True)[0]
+        code = sample(1, noise=0.0)
+        song = model.generate(code, code_img=True, img=True)[0]
         print song[song.nonzero()].mean()
-        final = song > -0.8
+        final = song > -0.5
         coder.decode(final, speed=1.).write('midi', 'example.mid')
 
-        print final.nonzero()
+        # print final.nonzero()
 
         import matplotlib.pyplot as plt
         plt.subplot(311)

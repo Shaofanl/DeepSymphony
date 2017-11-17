@@ -29,9 +29,9 @@ if __name__ == '__main__':
         # basic
         cells=[64, 32],  # [64, 32, 32],
         repeats=[1, 1],  # [8, 2, 1],
-        last_bidirectional=False,
+        bidirection=[False, False],
         timesteps=_timesteps,
-        code_dim=50,
+        code_dim=200,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
         onehot=False,
@@ -48,13 +48,17 @@ if __name__ == '__main__':
         batch_size=32,
         continued=False,
         overwrite_workdir=True,
-        iterations=20000,
+        iterations=40000,
         workdir='./temp/DCRNN_RhythmGAN/'
     )
     model = DCRNN(hparam)
     model.build()
     # coder = NoteDurationCoder(normalize_key='C5', first_voice=False)
-    coder = MultiHotCoder(normalize_key='C5', only_major=True)
+    # coder = MultiHotCoder(normalize_key='C5', only_major=True)
+    coder = MultiHotCoder(normalize_key='C5',
+                          with_velocity=True,
+                          only_major=True,
+                          length_limit=np.inf)
 
     if hparam.code_dim == 3:
         def sample(batch_size):
@@ -78,23 +82,26 @@ if __name__ == '__main__':
                                            hparam.code_dim))
 
     try:
-        data = np.load('temp/easy.npz')['data']
+        # data = np.load('temp/easy.npz')
+        data = np.load('temp/piano-midi.npz')
+        voi, vel = data['voice'], data['velocity']
+        # data = (voi*vel)/127.
+        data = voi
     except:
+        def read_song(filename):
+            return coder.encode(ms.converter.parse(filename))
+
         data = np.array(map_dir(
-            lambda fn: coder.encode(ms.converter.parse(fn)),
-            './datasets/easymusicnotes/'))
-        np.savez('temp/easy.npz', data=data)
+            read_song,
+            # './datasets/piano-midi.de/', cores=6))
+            './datasets/easymusicnotes/', cores=8))
+        data = filter(lambda x: x is not None, data)
+        voi, vel = zip(*data)
+        np.savez('temp/easy.npz', voice=voi, velocity=vel)
+        # np.savez('temp/piano-midi.npz', voice=voi, velocity=vel)
 
     print(len(data), map(lambda x: len(x), data))
-    data = filter(lambda x: len(x) > 0 and x.shape[1] > hparam.timesteps, data)
-    # import matplotlib.pyplot as plt
-    # for d in data:
-    #     print d.shape
-    #     for v in d:
-    #         fig, ax = plt.subplots()
-    #         ax.imshow(v)
-    #     plt.show()
-    data = map(lambda x: x.sum(0), data)
+    data = filter(lambda x: len(x) > 0 and x.shape[0] > hparam.timesteps, data)
     print(len(data), map(lambda x: len(x), data))
 
     train_data, test_data = train_test_split(data,
@@ -128,7 +135,7 @@ if __name__ == '__main__':
 
     if mode == 'generate':
         seed = np.random.randint(1e+9)
-        seed = 619122590
+        # seed = 619122590
         print 'seed', seed
         np.random.seed(seed)
 
@@ -136,31 +143,49 @@ if __name__ == '__main__':
         mode = '10'
         mode = '2x'
         if mode == '10':
-            code = sample(10)
+            code = sample(5)
             code = np.reshape(
                 np.tile(np.expand_dims(code, 1), (1, 128, 1)),
                 (-1, code.shape[-1]))
             song = model.generate([code], code_img=True, img=True)[0]
         if mode == '1':
+            code = sample(1)
             song = model.generate(code, img=True)[0]
         if mode == '2x':
             codeA = sample(1)
-            codeA = np.reshape(np.tile(np.expand_dims(codeA, 1), (1, 128, 1)),
+            codeA = np.reshape(np.tile(np.expand_dims(codeA, 1), (1, 64, 1)),
                                (-1, codeA.shape[-1]))
             codeB = sample(1)
-            codeB = np.reshape(np.tile(np.expand_dims(codeB, 1), (1, 128, 1)),
+            codeB = np.reshape(np.tile(np.expand_dims(codeB, 1), (1, 64, 1)),
                                (-1, codeB.shape[-1]))
-            code = np.concatenate([codeA, codeB, codeA, codeB, codeA], axis=0)
+            codeC = sample(1)
+            codeC = np.reshape(np.tile(np.expand_dims(codeC, 1), (1, 64, 1)),
+                               (-1, codeC.shape[-1]))
+
+            code = np.concatenate([codeA,
+                                   codeB,
+                                   codeA,
+                                   codeC,
+                                   codeA,
+                                   codeC,
+                                   codeA,
+                                   codeA,
+                                   codeB,
+                                   codeC],
+                                  axis=0)
             song = model.generate([code], code_img=True, img=True)[0]
 
         print song[song.nonzero()].mean()
-        final = song > -0.3
-        coder.decode(final, speed=1.).write('midi', 'example.mid')
+        final = song > 0.3
+        velocity = ((song+1)/2.*127).astype('uint8')
+        print 'velocity range', velocity.max(), velocity.min()
+        coder.decode(final, speed=1.).\
+            write('midi', 'example.mid')
 
         coder = NoteDurationCoder(first_voice=False)
         note, dura = coder.encode(ms.converter.parse('example.mid'),
                                   force=True)
-        coder.decode(note, 2).write('midi', 'quantized.mid')
+        coder.decode(note, duracode=2).write('midi', 'quantized.mid')
 
         import matplotlib.pyplot as plt
         plt.subplot(211)
@@ -193,7 +218,7 @@ if __name__ == '__main__':
         port_name = mido.get_output_names()[0]
         print 'using port', port_name
         player = MultihotsPlayer(outport_name=port_name,
-                                 threshold=-0.3,
+                                 threshold=0.8,
                                  speed=6.)
 
         # rng = np.random.RandomState(10)

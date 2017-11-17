@@ -63,3 +63,31 @@ class ExampleCoderPlayer(Player):
             self.current_t += delta
         elif ind < sum(decoder.EVENT_RANGE[:4]):
             self.current_v = 2**(ind-sum(decoder.EVENT_RANGE[:3]))
+
+
+class MultihotsPlayer(Player):
+    def __init__(self, threshold, speed, **kwargs):
+        self.keyboard = np.zeros((128,))
+        self.threshold = threshold
+        self.current_v = 60
+        self.speed = speed
+
+        super(MultihotsPlayer, self).__init__(**kwargs)
+
+    def play(self, hots):
+        for ind, ele in enumerate(hots):
+            if self.keyboard[ind] == 0:
+                if ele > self.threshold:
+                    msg = Message('note_on',
+                                  note=ind,
+                                  velocity=self.current_v)
+                    self.port.send(msg)
+                    self.keyboard[ind] = 1
+            else:
+                if ele <= self.threshold:
+                    self.keyboard[ind] = 0
+                    msg = Message('note_off',
+                                  note=ind,
+                                  velocity=self.current_v)
+                    self.port.send(msg)
+        sleep(1./self.speed)

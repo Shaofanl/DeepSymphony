@@ -46,15 +46,15 @@ def process(params):
         #   rescaled: only take (3~5)
 
         # density 1:
-        # density = float(len(notes)) / sample_range
-        # density = np.clip(density*10., 0., 2.5)
-        # density = int(np.round((density-0.)/2.5 * 9.))
+        density = float(len(notes)) / sample_range
+        density = np.clip(density*10., 1.0, 2.0)
+        density = int(np.round((density-1.0)/1.0 * 9.))
 
         # density 2:
-        rest = xi[(256 < xi)*(xi < 356)] - 256
-        density = rest.sum()
-        density = np.clip(density, 30., 150.)
-        density = int(np.round((density-30.)/120. * 9.))
+        # rest = xi[(256 < xi)*(xi < 356)] - 256
+        # density = rest.sum()
+        # density = np.clip(density, 30., 150.)
+        # density = int(np.round((density-30.)/120. * 9.))
         ci[ind-l, 10+density] = 1.0
         # print mean_pitch, density, hist
     return ci
@@ -70,14 +70,14 @@ if __name__ == '__main__':
     coder = ExampleCoder(return_onehot=False)
     hparam = CondStackedLSTMHParam(
         # basic
-        cells=[64],  # [512, 512, 512],
+        cells=[64, 32],  # [512, 512, 512],
         embed_dim=128,
         input_dim=coder.EVENT_COUNT,
         output_dim=coder.EVENT_COUNT,
         cond_len=32,
         # training
         batch_size=32,
-        timesteps=20,
+        timesteps=64,
         iterations=500,
         learning_rate=1e-4,
         continued=True,
@@ -91,8 +91,8 @@ if __name__ == '__main__':
 
     global data
     try:
-        data = np.load('temp/cond_easy.npz')['data']
-        # data = np.load('temp/cond_e-comp.npz')['data']
+        # data = np.load('temp/cond_easy.npz')['data']
+        data = np.load('temp/cond_e-comp.npz')['data']
     except:
         # data = np.array(map_dir(lambda fn: coder.encode(get_midi(fn)),
         #                         './datasets/easymusicnotes'))
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         #                         './datasets/e-comp/'))
         # np.savez('temp/cond_e-comp.npz', data=data)
         pass
-    data = [data[2]]
+    # data = [data[2]]
 
     if mode == 'train':
         from multiprocessing import Pool

@@ -17,9 +17,9 @@ if __name__ == '__main__':
     # 2. evaluate it if you want
     # 3. collect the codes
     # 4. generate with the collected code
-    mode = 'train'
+    # mode = 'train'
     # mode = 'eval'
-    # mode = 'collect'
+    mode = 'collect'
     # mode = 'generate'
 
     hparam = SeqAEHParam(batch_size=64,
