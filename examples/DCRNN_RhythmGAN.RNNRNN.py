@@ -15,7 +15,7 @@ from tensorflow.contrib import rnn
 
 if __name__ == '__main__':
     mode = 'train'
-    mode = 'generate'
+    # mode = 'generate'
     # mode = 'analyze'
     # mode = 'myo'
 
@@ -37,9 +37,11 @@ if __name__ == '__main__':
         onehot=False,
         timestep_pad=False,
         code_ndim=2,
+        rnn_dis=True,
+        deconv_decision=True,
         # hparam
         trainable_gen=['generator'],
-        D_lr=1e-3,
+        D_lr=5e-4,
         G_lr=5e-4,  # change to 1e-4 when finetuning
         G_k=5,
         D_boost=0,
@@ -49,7 +51,7 @@ if __name__ == '__main__':
         continued=False,
         overwrite_workdir=True,
         iterations=40000,
-        workdir='./temp/DCRNN_RhythmGAN/'
+        workdir='./temp/DCRNN_RhythmGAN.RNNRNN/'
     )
     model = DCRNN(hparam)
     model.build()

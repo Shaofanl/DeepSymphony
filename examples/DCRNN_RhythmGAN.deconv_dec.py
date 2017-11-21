@@ -15,7 +15,7 @@ from tensorflow.contrib import rnn
 
 if __name__ == '__main__':
     mode = 'train'
-    mode = 'generate'
+    # mode = 'generate'
     # mode = 'analyze'
     # mode = 'myo'
 
@@ -27,16 +27,17 @@ if __name__ == '__main__':
         _timesteps = 16
     hparam = DCRNNHParam(
         # basic
-        cells=[64, 32],  # [64, 32, 32],
-        repeats=[1, 1],  # [8, 2, 1],
+        cells=[32],  # [64, 32, 32],
+        repeats=[1],  # [8, 2, 1],
         bidirection=[False, False],
         timesteps=_timesteps,
-        code_dim=200,
+        code_dim=50,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
         onehot=False,
         timestep_pad=False,
         code_ndim=2,
+        deconv_decision=True,
         # hparam
         trainable_gen=['generator'],
         D_lr=1e-3,
@@ -49,7 +50,7 @@ if __name__ == '__main__':
         continued=False,
         overwrite_workdir=True,
         iterations=40000,
-        workdir='./temp/DCRNN_RhythmGAN/'
+        workdir='./temp/DCRNN_RhythmGAN.deconv_dec/'
     )
     model = DCRNN(hparam)
     model.build()
@@ -135,14 +136,14 @@ if __name__ == '__main__':
 
     if mode == 'generate':
         seed = np.random.randint(1e+9)
-        seed = 619122590
+        # seed = 619122590
         print 'seed', seed
         np.random.seed(seed)
 
         mode = '1'
-        mode = '10'
-        mode = '2x'
-        mode = 'rand'
+        # mode = '10'
+        # mode = '2x'
+        # mode = 'rand'
         if mode == 'rand':
             codes = []
             code = sample(1)
@@ -172,20 +173,19 @@ if __name__ == '__main__':
             codeB = np.reshape(np.tile(np.expand_dims(codeB, 1), (1, 128, 1)),
                                (-1, codeB.shape[-1]))
             codeC = sample(1)
-            codeC = np.reshape(np.tile(np.expand_dims(codeC, 1), (1, 64, 1)),
+            codeC = np.reshape(np.tile(np.expand_dims(codeC, 1), (1, 128, 1)),
                                (-1, codeC.shape[-1]))
 
-            code = np.concatenate([codeC,
+            code = np.concatenate([codeA,
+                                   codeB,
                                    codeA,
                                    codeB,
-                                   codeC,
-                                   codeA,
-                                   codeB],
+                                   codeC],
                                   axis=0)
             song = model.generate([code], code_img=True, img=True)[0]
 
         print song[song.nonzero()].mean()
-        final = song > 0.3
+        final = song > 0.9
         velocity = ((song+1)/2.*127).astype('uint8')
         print 'velocity range', velocity.max(), velocity.min()
         coder.decode(final, speed=1.).\

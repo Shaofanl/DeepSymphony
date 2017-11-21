@@ -120,7 +120,7 @@ class MultiHotCoder(object):
         self.merge_voices = merge_voices
         self.length_limit = length_limit
 
-    def encode(self, score,):
+    def encode(self, score, force=False):
         length = int(score.duration.quarterLength/self.resolution)
         if length > self.length_limit:
             return None
@@ -140,33 +140,51 @@ class MultiHotCoder(object):
             return None
 
         for stream in score.parts:
-            if not isinstance(stream.partName, str) or \
-               'Piano' not in stream.partName:
-                continue
+            if not force:
+                if not isinstance(stream.partName, str) or \
+                   'Piano' not in stream.partName:
+                    continue
 
-            for comp in stream:
+            for comp in stream.voices:
                 # if isinstance(comp, ms.instrument.Instrument):
                 #     if not isinstance(comp, ms.instrument.Piano):
                 #         # an instrument other than piano
                 #         break
 
-                if isinstance(comp, ms.stream.Voice):
-                    voice = np.zeros((length, self.keys))
-                    velocity = np.zeros((length, self.keys))
-                    for note in comp:
-                        start = int(note.offset/self.resolution)
-                        leni = int(note.duration.quarterLength/self.resolution)
-                        if isinstance(note, ms.note.Note):
-                            voice[start:start+leni, note.pitch.midi] = 1.0
-                            velocity[start:start+leni, note.pitch.midi] = \
+                voice = np.zeros((length, self.keys))
+                velocity = np.zeros((length, self.keys))
+                for note in comp:
+                    start = int(note.offset/self.resolution)
+                    leni = int(note.duration.quarterLength/self.resolution)
+                    if isinstance(note, ms.note.Note):
+                        voice[start:start+leni, note.pitch.midi] = 1.0
+                        velocity[start:start+leni, note.pitch.midi] = \
+                            note.volume.velocity
+                    elif isinstance(note, ms.chord.Chord):
+                        for c in note:
+                            voice[start:start+leni, c.pitch.midi] = 1.0
+                            velocity[start:start+leni, c.pitch.midi] = \
                                 note.volume.velocity
-                        elif isinstance(note, ms.chord.Chord):
-                            for c in note:
-                                voice[start:start+leni, c.pitch.midi] = 1.0
-                                velocity[start:start+leni, c.pitch.midi] = \
-                                    note.volume.velocity
-                    voices.append(voice)
-                    velocities.append(velocity)
+                voices.append(voice)
+                velocities.append(velocity)
+
+            if len([ele for ele in stream.voices]) == 0:
+                voice = np.zeros((length, self.keys))
+                velocity = np.zeros((length, self.keys))
+                for note in stream:
+                    start = int(note.offset/self.resolution)
+                    leni = int(note.duration.quarterLength/self.resolution)
+                    if isinstance(note, ms.note.Note):
+                        voice[start:start+leni, note.pitch.midi] = 1.0
+                        velocity[start:start+leni, note.pitch.midi] = \
+                            note.volume.velocity
+                    elif isinstance(note, ms.chord.Chord):
+                        for c in note:
+                            voice[start:start+leni, c.pitch.midi] = 1.0
+                            velocity[start:start+leni, c.pitch.midi] = \
+                                note.volume.velocity
+                voices.append(voice)
+                velocities.append(velocity)
 
         voices = np.array(voices)
         velocities = np.array(velocities)
@@ -197,6 +215,7 @@ class MultiHotCoder(object):
                 velocity = np.expand_dims(velocity, 0)
                 print velocity.shape
             print codes.shape
+
         nb_voices = codes.shape[0]
         stream = ms.stream.Stream()
         for vind in range(nb_voices):
@@ -217,7 +236,7 @@ class MultiHotCoder(object):
                         if starts[nind] != -1:
                             note = ms.note.Note(nind)
                             note.volume.velocity = \
-                                veli[tind, nind] if velocity \
+                                veli[starts[nind], nind] if velocity \
                                 is not None else 60
                             note.duration = \
                                 ms.duration.Duration(ratio*(tind-starts[nind]))

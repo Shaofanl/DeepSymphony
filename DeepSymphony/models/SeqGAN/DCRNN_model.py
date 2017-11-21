@@ -37,6 +37,8 @@ class DCRNNHParam(HParam):
     plus_code = False
     show_grad = False
     show_input = False
+    rnn_dis = False
+    deconv_decision = False
     # training
     D_lr = 1e-5
     G_lr = 1e-5
@@ -152,37 +154,102 @@ class DCRNN(object):
                 print o
 
             with tf.variable_scope('decision'):
-                fake_seq_img = outputs[-1]
-                fake_seq_img = layers.linear(fake_seq_img, hparam.vocab_size)
-                outputs.append(fake_seq_img)
-                fake_seq_img = tf.tanh(fake_seq_img)
-                # fake_seq_img = tf.nn.softmax(fake_seq_img, -1)
-                outputs.append(fake_seq_img)
+                if hparam.deconv_decision:
+                    fake_seq_img = outputs[-1]
+
+                    right = slim.fully_connected(
+                        fake_seq_img, 32*10, activation_fn=None)
+                    right = tf.reshape(
+                        right, [bs, hparam.timesteps, 10, 32])
+                    # right = tf.nn.softmax(right, -1)
+                    right = slim.conv2d_transpose(
+                        right, 1, [1, 12], stride=(1, 12),
+                        activation_fn=tf.tanh)[:, :, :, 0]
+
+                    fake_seq_img = right
+                    fake_seq_img = tf.concat(
+                        [tf.ones([bs, hparam.timesteps, 4])*-1,
+                         fake_seq_img,
+                         tf.ones([bs, hparam.timesteps, 4])*-1],
+                        axis=2)
+                    print fake_seq_img
+                else:
+                    fake_seq_img = outputs[-1]
+                    fake_seq_img = layers.linear(fake_seq_img, hparam.vocab_size)
+                    outputs.append(fake_seq_img)
+                    fake_seq_img = tf.tanh(fake_seq_img)
+                    # fake_seq_img = tf.nn.softmax(fake_seq_img, -1)
+                    outputs.append(fake_seq_img)
                 fake_seq = tf.argmax(fake_seq_img, -1)
 
             if hparam.plus_code:
                 fake_seq_img = tf.clip_by_value(fake_seq_img+code, -1., +1.)
 
         # discriminator
-        def dis(seq_img, bn_scope, reuse=False):
-            with tf.variable_scope('discriminator', reuse=reuse):
-                # x = tf.nn.embedding_lookup(embeddings, seq)
-                x = tf.expand_dims(seq_img, -1)
-                # x = ResNetBuilder(dis_train,
-                #                   bn_scopes=['fake', 'real'],
-                #                   bn_scope=bn_scope).\
-                #     resnet(x, structure=[2, 2, 2, 2], filters=8, nb_class=1)
+        if hparam.rnn_dis:
+            def dis(seq_img, bn_scope, reuse=False):
+                with tf.variable_scope('discriminator', reuse=reuse):
+                    print 'dis'
+                    slices = tf.unstack(seq_img, axis=1)
+                    fw_cell = hparam.basic_cell(32)
+                    # bw_cell = hparam.basic_cell(64)
+                    x, state = tf.nn.static_rnn(
+                        fw_cell,  # bw_cell,
+                        slices,
+                        dtype=tf.float32,
+                    )
+                    x = tf.stack(x, axis=1)
+                    print x
+                    # x = tf.concat(x, 2)
+                    x = slim.linear(x, 1)
+                    print x
+                    x = slim.flatten(x)
+                    print x
+                    x = slim.linear(x, 1)
+                    print x
+                    # x = tf.nn.sigmoid(x)
+                return x
+        else:
+            def dis(seq_img, bn_scope, reuse=False):
+                with tf.variable_scope('discriminator', reuse=reuse):
+                    fs = 32
+                    covariance = tf.matmul(seq_img, seq_img, transpose_b=True)
+                    x = tf.expand_dims(covariance, -1)
+                    x = lrelu(slim.conv2d(x, fs*1, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    x = lrelu(slim.conv2d(x, fs*2, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    x = lrelu(slim.conv2d(x, fs*4, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    x = lrelu(slim.conv2d(x, fs*4, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    covariance_feat = slim.flatten(x)
 
-                #  note axis
-                fs = 32
-                x = lrelu(slim.conv2d(x, fs*1, [5, 5], stride=2))
-                x = lrelu(slim.conv2d(x, fs*2, [5, 5], stride=2))
-                x = lrelu(slim.conv2d(x, fs*4, [5, 5], stride=2))
-                x = lrelu(slim.conv2d(x, fs*4, [5, 5], stride=2))
-                x = slim.flatten(x)
-                x = slim.linear(x, 1)
-                # x = tf.nn.sigmoid(x)
-            return x
+                    # x = tf.nn.embedding_lookup(embeddings, seq)
+                    # x = ResNetBuilder(dis_train,
+                    #                   bn_scopes=['fake', 'real'],
+                    #                   bn_scope=bn_scope).\
+                    #     resnet(x, structure=[2, 2, 2, 2], filters=8, nb_class=1)
+
+                    #  note axis
+                    fs = 32
+                    x = seq_img
+                    x = tf.expand_dims(seq_img, -1)
+                    x = lrelu(slim.conv2d(x, fs*1, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    x = lrelu(slim.conv2d(x, fs*2, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    x = lrelu(slim.conv2d(x, fs*4, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    x = lrelu(slim.conv2d(x, fs*4, [5, 5]))
+                    x = slim.max_pool2d(x, (2, 2))
+                    seq_feat = slim.flatten(x)
+
+                    feat = tf.concat([covariance_feat, seq_feat], axis=1)
+
+                    x = slim.linear(feat, 1)
+                    # x = tf.nn.sigmoid(x)
+                return x
         # opt
         # problematic with the reuse bn
         # fake_seq_img = tf.where(
@@ -203,14 +270,19 @@ class DCRNN(object):
                    tf.shape(real_seq_img)[1]])
         epsilon = tf.tile(tf.expand_dims(epsilon, -1),
                           (1, 1, tf.shape(real_seq_img)[2]))
+        print 'grad'
         intepolation = fake_seq_img*epsilon+real_seq_img*(1.0-epsilon)
         inte_dis_pred = dis(intepolation, bn_scope='intepolation', reuse=True)
         grad = tf.gradients(inte_dis_pred, intepolation)[0]
+        print grad
         grad = tf.reshape(grad, (-1, hparam.timesteps*hparam.vocab_size))
+        print grad
         D_loss = tf.reduce_mean(fake_dis_pred) - \
             tf.reduce_mean(real_dis_pred) + \
             10*tf.reduce_mean(tf.square(tf.norm(grad, ord=2, axis=1)-1))
         G_loss = -tf.reduce_mean(fake_dis_pred)
+        print D_loss
+        print G_loss
 
         fake_seq_img_grad = tf.gradients(G_loss, fake_seq_img)[0]
 
