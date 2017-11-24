@@ -51,7 +51,7 @@ if __name__ == '__main__':
         model.summary()
 
         coder = MultiHotCoder()
-        notes = coder.encode(ms.converter.parse('example.mid'), force=True)
+        notes = coder.encode(ms.converter.parse('example.d.mid'), force=True)
         velocity = model.predict(np.array([notes]))[0]
         velocity = ((velocity+1)/2.*127.).astype('uint8')
 

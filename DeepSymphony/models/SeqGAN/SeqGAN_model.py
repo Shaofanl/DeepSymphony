@@ -248,5 +248,3 @@ class SeqGAN(object):
                 train_writer.add_summary(summary_real_dis_pred, i)
 
             saver.save(sess, hparam.weight_path)
-
-

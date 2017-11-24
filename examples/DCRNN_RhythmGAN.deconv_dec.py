@@ -20,18 +20,18 @@ if __name__ == '__main__':
     # mode = 'myo'
 
     if mode == 'train':
-        _timesteps = 128
+        _timesteps = 64
     elif mode == 'generate':
         _timesteps = 640
     elif mode == 'myo':
         _timesteps = 16
     hparam = DCRNNHParam(
         # basic
-        cells=[32],  # [64, 32, 32],
-        repeats=[1],  # [8, 2, 1],
+        cells=[64, 32],  # [64, 32, 32],
+        repeats=[1, 1],  # [8, 2, 1],
         bidirection=[False, False],
         timesteps=_timesteps,
-        code_dim=50,
+        code_dim=20,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
         onehot=False,
@@ -41,8 +41,8 @@ if __name__ == '__main__':
         # hparam
         trainable_gen=['generator'],
         D_lr=1e-3,
-        G_lr=5e-4,  # change to 1e-4 when finetuning
-        G_k=5,
+        G_lr=8e-4,  # change to 1e-4 when finetuning
+        G_k=2,
         D_boost=0,
         G_clipnorm=None,  # 1.0,
         # traini

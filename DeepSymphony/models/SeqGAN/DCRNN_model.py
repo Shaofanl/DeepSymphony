@@ -39,6 +39,9 @@ class DCRNNHParam(HParam):
     show_input = False
     rnn_dis = False
     deconv_decision = False
+    # conditional
+    conditional = False
+    cond_dim = 10
     # training
     D_lr = 1e-5
     G_lr = 1e-5
@@ -73,20 +76,23 @@ class DCRNN(object):
         hparam = self.hparam
 
         if hparam.code_ndim == 3:
-            code = tf.placeholder("float32", [None,
-                                              hparam.timesteps,
-                                              hparam.code_dim],
-                                  name='code')
+            code_shape = [None, hparam.timesteps, hparam.code_dim]
+            cond_shape = [None, hparam.timesteps, hparam.cond_dim]
         elif hparam.code_ndim == 2:
-            code = tf.placeholder("float32", [None,
-                                              hparam.code_dim],
-                                  name='code')
-        real_seq = tf.placeholder("int32", [None,
-                                            hparam.timesteps],
+            code_shape = [None, hparam.code_dim]
+            cond_shape = [None, hparam.cond_dim]
+
+        code = ori_code = tf.placeholder("float32", code_shape, name='code')
+        if hparam.conditional:
+            assert hparam.onehot is False, "NotImplemented: cond with onehot"
+            cond = tf.placeholder("float32", cond_shape, name='condition')
+            code = tf.concat([code, cond], -1)
+
+        real_seq = tf.placeholder("int32", [None, hparam.timesteps],
                                   name='real_seq')
         real_seq_img = tf.one_hot(real_seq, hparam.vocab_size)
         dis_train = tf.placeholder('bool', name='is_train')
-        bs = tf.shape(code)[0]
+        bs = tf.shape(ori_code)[0]
 
         # generator
         final_states = []
@@ -210,7 +216,7 @@ class DCRNN(object):
                     # x = tf.nn.sigmoid(x)
                 return x
         else:
-            def dis(seq_img, bn_scope, reuse=False):
+            def dis(seq_img, bn_scope, reuse=False, cond_vec=None):
                 with tf.variable_scope('discriminator', reuse=reuse):
                     fs = 32
                     covariance = tf.matmul(seq_img, seq_img, transpose_b=True)
@@ -246,6 +252,9 @@ class DCRNN(object):
                     seq_feat = slim.flatten(x)
 
                     feat = tf.concat([covariance_feat, seq_feat], axis=1)
+                    if cond_vec is not None:
+                        feat = tf.concat([feat, cond_vec], axis=-1)
+                    feat = lrelu(slim.linear(feat, 200))
 
                     x = slim.linear(feat, 1)
                     # x = tf.nn.sigmoid(x)
@@ -256,23 +265,34 @@ class DCRNN(object):
         #     tf.greater(fake_seq_img, 0.5),
         #     fake_seq_img,
         #     tf.zeros_like(fake_seq_img))
-        fake_dis_pred = dis(fake_seq_img, bn_scope='fake')
-        real_dis_pred = dis(real_seq_img, bn_scope='real', reuse=True)
+        if hparam.conditional:
+            if len(cond_shape) == 3:
+                raise Exception("NotImplemented: cond with ndim3 (DisNet)")
+            cond_real = tf.placeholder("float32", [None, hparam.cond_dim],
+                                       name='cond_real')
+
+        fake_dis_pred = dis(fake_seq_img,
+                            cond_vec=cond if hparam.conditional else None,
+                            bn_scope='fake')
+        real_dis_pred = dis(real_seq_img,
+                            cond_vec=cond_real if hparam.conditional else None,
+                            bn_scope='real',
+                            reuse=True)
 
         # traditional GAN loss
         # G_loss = tf.reduce_mean(-safe_log(fake_dis_pred))
         # D_loss = tf.reduce_mean(-safe_log(real_dis_pred)) +\
         #     tf.reduce_mean(-safe_log(1-fake_dis_pred))
         # IWGAN
-        epsilon = tf.random_uniform(
-            minval=0, maxval=1.0,
-            shape=[tf.shape(real_seq_img)[0],
-                   tf.shape(real_seq_img)[1]])
-        epsilon = tf.tile(tf.expand_dims(epsilon, -1),
-                          (1, 1, tf.shape(real_seq_img)[2]))
+        epsilon = tf.random_uniform(minval=0, maxval=1.0, shape=())
+
         print 'grad'
         intepolation = fake_seq_img*epsilon+real_seq_img*(1.0-epsilon)
-        inte_dis_pred = dis(intepolation, bn_scope='intepolation', reuse=True)
+        inte_dis_pred = dis(intepolation,
+                            cond_vec=(cond*epsilon+cond_real*(1.0-epsilon))/2.
+                            if hparam.conditional else None,
+                            bn_scope='intepolation',
+                            reuse=True)
         grad = tf.gradients(inte_dis_pred, intepolation)[0]
         print grad
         grad = tf.reshape(grad, (-1, hparam.timesteps*hparam.vocab_size))
@@ -317,9 +337,13 @@ class DCRNN(object):
         iter_step_op = iter_step.assign_add(1)
 
         # input
+        self.ori_code = ori_code
         self.code = code
         self.real_seq = real_seq
         self.real_seq_img = real_seq_img
+        if hparam.conditional:
+            self.cond = cond
+            self.cond_real = cond_real 
         # summary
         self.summary_fake_img = tf.summary.image(
             'fake_img', tf.expand_dims(fake_seq_img, -1))
@@ -368,7 +392,7 @@ class DCRNN(object):
                 tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
                                   'generator')
 
-    def generate(self, code,
+    def generate(self, code, cond=None,
                  real_time_callback=None,
                  code_img=False, img=False):
         hparam = self.hparam
@@ -377,22 +401,28 @@ class DCRNN(object):
             saver.restore(sess, hparam.weight_path)
             print 'restore from iteration', self.iter_step.eval()
 
-            input_tensor = self.first_input if code_img else self.code
+            input_tensor = self.first_input if code_img else self.ori_code
             tensor = self.fake_seq_img if img else self.fake_seq
 
             if real_time_callback is not None:
                 state = sess.run(self.init_states,
                                  feed_dict={self.bs_tensor: 1})
                 for codei in code:
+                    feed_dict = {input_tensor: codei,
+                                 self.init_states: state,
+                                 self.bs_tensor: len(codei)}
+                    if hparam.conditional:
+                        feed_dict.update({self.cond: cond})
                     seq, state = sess.run(
                         [tensor, self.final_states],
-                        feed_dict={input_tensor: codei,
-                                   self.init_states: state,
-                                   self.bs_tensor: len(codei)})
+                        feed_dict=feed_dict)
                     real_time_callback(seq)
             else:
-                seq = sess.run(tensor, feed_dict={input_tensor: code,
-                                                  self.bs_tensor: len(code)})
+                feed_dict = {input_tensor: code,
+                             self.bs_tensor: len(code)}
+                if hparam.conditional:
+                    feed_dict.update({self.cond: cond})
+                seq = sess.run(tensor, feed_dict=feed_dict)
                 return seq
 
     def analyze(self, sample):
@@ -404,7 +434,7 @@ class DCRNN(object):
             code = sample(hparam.batch_size)
 
             outputs = sess.run(self.gen_outputs,
-                               feed_dict={self.code: code})
+                               feed_dict={self.ori_code: code})
             outputs[0] = outputs[0][:, :, :-1]
 
             print np.var(code, 0).mean()
@@ -412,7 +442,7 @@ class DCRNN(object):
                 o = o.reshape(o.shape[0], -1)
                 print np.var(o, 0).mean()
 
-    def train(self, sample, fetch_data, continued=None):
+    def train(self, sample, fetch_data, continued=None, cond_vfun=None):
         if self.built is False:
             self.build()
         hparam = self.hparam
@@ -446,8 +476,10 @@ class DCRNN(object):
 
             vis_code = sample(hparam.batch_size)
             history = sess.run(self.fake_seq_img,
-                               feed_dict={self.code: vis_code})
+                               feed_dict=self.get_gen_feed_dict(vis_code))
             history = np.concatenate([history, history])
+            if hparam.conditional:
+                history_cond = np.concatenate([vis_code[1], vis_code[1]])
 
             i = begin = self.iter_step.eval()
             while i < hparam.iterations+begin:
@@ -456,37 +488,40 @@ class DCRNN(object):
                 sess.run(self.iter_step_op)
 
                 code = sample(hparam.batch_size)
-                real_seq = fetch_data(hparam.batch_size)
-                real_seq_tensor = self.real_seq if hparam.onehot else\
-                    self.real_seq_img
+                real_data = fetch_data(hparam.batch_size)
 
-                new_fake_seq_img = sess.run(self.fake_seq_img,
-                                            feed_dict={self.code: code})
+                new_fake_seq_img = sess.run(
+                    self.fake_seq_img, feed_dict=self.get_gen_feed_dict(code))
                 replace_ind = np.random.choice(hparam.batch_size*2,
                                                size=(hparam.batch_size,),
                                                replace=False)
                 history[replace_ind] = new_fake_seq_img
+                if hparam.conditional:
+                    history_cond[replace_ind] = code[1]
                 train_ind = np.random.choice(hparam.batch_size*2,
                                              size=(hparam.batch_size,),
                                              replace=False)
+                fake_data = history[train_ind]
+                if hparam.conditional:
+                    real_data = (real_data, cond_vfun(real_data))
+                    fake_data = (fake_data, history_cond[train_ind])
 
                 summary_D_loss, summary_real_img, _ = \
                     sess.run([self.summary_D_loss,
                               self.summary_real_img,
                               self.D_train_op],
-                             feed_dict={real_seq_tensor: real_seq,
-                                        self.fake_seq_img: history[train_ind],
-                                        self.dis_train: True}
-                             )
+                             feed_dict=self.get_dis_feed_dict(
+                                 real_data, fake_data,
+                                 {self.dis_train: True}))
                 train_writer.add_summary(summary_real_img, i)
                 train_writer.add_summary(summary_D_loss, i)
 
                 summary_fake_dis_pred, summary_real_dis_pred = \
                     sess.run([self.summary_fake_dis_pred,
                               self.summary_real_dis_pred],
-                             feed_dict={real_seq_tensor: real_seq,
-                                        self.fake_seq_img: history[train_ind],
-                                        self.dis_train: False})
+                             feed_dict=self.get_dis_feed_dict(
+                                 real_data, fake_data,
+                                 {self.dis_train: False}))
                 train_writer.add_summary(summary_fake_dis_pred, i)
                 train_writer.add_summary(summary_real_dis_pred, i)
 
@@ -494,19 +529,19 @@ class DCRNN(object):
                     summary_fake_img, summary_fake_img_grad = \
                         sess.run([self.summary_fake_img,
                                   self.summary_fake_img_grad],
-                                 feed_dict={self.code: vis_code})
+                                 feed_dict=self.get_gen_feed_dict(vis_code))
                     train_writer.add_summary(summary_fake_img, i)
                     train_writer.add_summary(summary_fake_img_grad, i)
                 else:
                     summary_fake_img = \
                         sess.run(self.summary_fake_img,
-                                 feed_dict={self.code: vis_code})
+                                 feed_dict=self.get_gen_feed_dict(vis_code))
                     train_writer.add_summary(summary_fake_img, i)
 
                 if hparam.show_input:
                     summary_first_input = \
                         sess.run(self.summary_first_input,
-                                 feed_dict={self.code: vis_code})
+                                 feed_dict=self.get_gen_feed_dict(vis_code))
                     train_writer.add_summary(summary_first_input, i)
 
                 if i < hparam.D_boost:
@@ -514,13 +549,37 @@ class DCRNN(object):
 
                 for _ in range(hparam.G_k):
                     summary_G_loss, _ = \
-                        sess.run([self.summary_G_loss,
-                                  self.G_train_op],
-                                 feed_dict={self.code: code,
-                                            self.dis_train: False})
+                        sess.run([
+                            self.summary_G_loss,
+                            self.G_train_op],
+                            feed_dict=self.get_gen_feed_dict(
+                                vis_code, extra={self.dis_train: False}))
                     # problematic with the reuse bn
                 train_writer.add_summary(summary_G_loss, i)
 
                 if i % 100 == 0:
                     saver.save(sess, hparam.weight_path)
             saver.save(sess, hparam.weight_path)
+
+    def get_gen_feed_dict(self, code, extra={}):
+        feed_dict = extra
+        if self.hparam.conditional:
+            feed_dict[self.ori_code] = code[0]
+            feed_dict[self.cond] = code[1]
+        else:
+            feed_dict[self.ori_code] = code
+        return feed_dict
+
+    def get_dis_feed_dict(self, real, fake, extra):
+        feed_dict = extra
+        real_seq_tensor = self.real_seq if self.hparam.onehot else\
+            self.real_seq_img
+        if self.hparam.conditional:
+            feed_dict[real_seq_tensor] = real[0]
+            feed_dict[self.cond_real] = real[1]
+            feed_dict[self.fake_seq_img] = fake[0]
+            feed_dict[self.cond] = fake[1]
+        else:
+            feed_dict[real_seq_tensor] = real
+            feed_dict[self.fake_seq_img] = fake
+        return feed_dict

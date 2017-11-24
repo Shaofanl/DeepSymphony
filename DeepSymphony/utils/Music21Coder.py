@@ -96,9 +96,9 @@ class NoteDurationCoder(object):
                 current_t += dura*self.resolution
             else:
                 duration = ms.duration.Duration(dura*self.resolution)
-                s.insert(current_t,
-                         ms.note.Note(note,
-                                      duration=duration))
+                note = ms.note.Note(note, duration=duration)
+                note.volume.velocity = 60
+                s.insert(current_t, note)
         return s
 
 
@@ -191,7 +191,7 @@ class MultiHotCoder(object):
 
         if len(voices) > 0:
             if self.merge_voices:
-                voices = voices.sum(0)
+                voices = np.max(voices, 0)
                 velocities = np.max(velocities, 0)
                 print 'max', voices.max(), velocities.max()
                 print 'shape', voices.shape, velocities.shape
