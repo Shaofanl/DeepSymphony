@@ -40,10 +40,11 @@ if __name__ == '__main__':
                                    vocab_size=128+1,
                                    debug=False,
                                    overwrite_workdir=True,
+                                   # workdir='./temp/SeqGAN_ablation/',
                                    clip_norm=1.,
-                                   alpha=1e-4,  # 5-->2, alpha*con_loss
+                                   alpha=5e-3,  # 5-->2, alpha*con_loss
                                    beta=1.00,
-                                   gamma=2e-2)  # gamma*q_loss
+                                   gamma=1e-3)  # gamma*q_loss
     model = ContinuousSeqAE(hparam)
     model.build()
     # coder = ExampleCoder()
@@ -212,11 +213,11 @@ if __name__ == '__main__':
             # rand /= np.sqrt((rand**2).sum())
             # pos = np.clip(pos + rand, 0, 1)
 
-            if rng.rand() < 0.5:
-                pos = -pos
-            else:
-                randint = rng.choice(len(theme), size=(2,), replace=False)
-                pos[randint] = -pos[randint]
+            #if rng.rand() < 0.5:
+            #     pos = -pos
+            # else:
+            randint = rng.choice(len(theme), size=(2,), replace=False)
+            pos[randint] = -pos[randint]
 
             # if np.random.rand() < 0.05:
             #    # shift of theme
@@ -228,19 +229,20 @@ if __name__ == '__main__':
             #     _theme, _theme2 = _theme2, _theme
             #     pos = _theme.copy()
 
-            # if i % 4 == 0:
-            #     if np.random.rand() < 0.10:
-            #         theme = pos.copy()
-            #     if np.random.rand() < 0.80:
-            #         pos = theme.copy()
+            if i % 4 == 0:
+                if np.random.rand() < 0.80:
+                    pos = theme.copy()
+                if np.random.rand() < 0.20:
+                    print 'switch theme'
+                    theme = pos.copy()
 
             # if np.random.rand() < 0.50:
             #     randint = np.random.randint(len(theme), size=(8,))
             #     pos[randint] = -pos[randint]
 
-            if rng.rand() < 0.10:
-                print 'repeat'
-                gen.extend(gen[-4:])
+            # if rng.rand() < 0.10:
+            #     print 'repeat'
+            #     gen.extend(gen[-4:])
 
             gen.append(pos.copy())
             # print pos
