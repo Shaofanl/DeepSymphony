@@ -47,9 +47,9 @@ if __name__ == '__main__':
     model = ContinuousSeqAE(hparam)
     model.build()
     # coder = ExampleCoder()
-    coder = NoteDurationCoder(normalize_key='C5',
+    coder = NoteDurationCoder(normalize_key='C5',)
                               # single=True,
-                              first_voice=True)
+                              # first_voice=True)
 
     try:
         data = np.load('temp/easy.npz')['data']

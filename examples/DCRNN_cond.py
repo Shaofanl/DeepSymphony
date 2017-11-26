@@ -31,13 +31,13 @@ if __name__ == '__main__':
         repeats=[1, 1],  # [8, 2, 1],
         bidirection=[False, False],
         timesteps=_timesteps,
-        code_dim=100,
+        code_dim=50,
         vocab_size=128,
         basic_cell=rnn.LSTMCell,
         onehot=False,
         timestep_pad=False,
         code_ndim=2,
-        deconv_decision=True,
+        # deconv_decision=True,
         conditional=True,
         cond_dim=12,
         # hparam
@@ -185,11 +185,10 @@ if __name__ == '__main__':
             codeC = np.reshape(np.tile(np.expand_dims(codeC, 1), (1, 64, 1)),
                                (-1, codeC.shape[-1]))
 
-            code = np.concatenate([codeC, codeA,
-                                   codeB, codeC,
-                                   codeA, codeB],
+            code = np.concatenate([codeA, codeB, codeA, codeB, codeA],
                                   axis=0)
-            song = model.generate([code], cond=cond, code_img=True, img=True)[0]
+            song = model.generate([code], cond=cond,
+                                  code_img=True, img=True)[0]
 
         print song[song.nonzero()].mean()
         final = song > 0.9
