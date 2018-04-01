@@ -431,6 +431,9 @@ class DCRNN(object):
             saver = tf.train.Saver(self.major_params)
             saver.restore(sess, hparam.weight_path)
 
+            import ipdb
+            ipdb.set_trace()
+
             code = sample(hparam.batch_size)
 
             outputs = sess.run(self.gen_outputs,

@@ -17,7 +17,7 @@ if __name__ == '__main__':
     mode = 'train'
     # mode = 'generate'
     # mode = 'analyze'
-    # mode = 'myo'
+    mode = 'myo'
 
     if mode == 'train':
         _timesteps = 64
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         batch_size=32,
         continued=False,
         overwrite_workdir=True,
-        iterations=40000,
+        iterations=20000,
         workdir='./temp/DCRNN_RhythmGAN.deconv_dec/'
     )
     model = DCRNN(hparam)
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     if mode == 'generate':
         seed = np.random.randint(1e+9)
         # seed = 619122590
-        print 'seed', seed
+        print('seed', seed)
         np.random.seed(seed)
 
         mode = '1'
@@ -184,10 +184,10 @@ if __name__ == '__main__':
                                   axis=0)
             song = model.generate([code], code_img=True, img=True)[0]
 
-        print song[song.nonzero()].mean()
+        print(song[song.nonzero()].mean())
         final = song > 0.9
         velocity = ((song+1)/2.*127).astype('uint8')
-        print 'velocity range', velocity.max(), velocity.min()
+        print('velocity range', velocity.max(), velocity.min())
         coder.decode(final, speed=1.).\
             write('midi', 'example.mid')
 
@@ -225,7 +225,7 @@ if __name__ == '__main__':
         import matplotlib.pyplot as plt
 
         port_name = mido.get_output_names()[0]
-        print 'using port', port_name
+        print('using port', port_name)
         player = MultihotsPlayer(outport_name=port_name,
                                  threshold=0.8,
                                  speed=6.)
@@ -236,16 +236,18 @@ if __name__ == '__main__':
 
         fig, ax = plt.subplots()
         plt.show(block=False)
-        bars = plt.bar(np.arange(1, 9),
-                       np.zeros(8),
-                       color=rng.rand(8, 3),)
-        ax.set_ylim([0, 2000])
+        bars = plt.bar(np.arange(1, len(noise)+1),
+                       noise,
+                       color=rng.rand(len(noise), 3),)
+        # ax.set_ylim([0, 2000])
+        ax.set_ylim(-1, 1)
 
         def emg_handler(emg, moving):
-            print emg
-            noise[0:8] = np.clip((np.array(emg)-500)/500., -1, +1)
-            noise[8:16] = np.clip((np.array(emg)-500)/500., -1, +1)
-            for bar, ele in zip(bars, emg):
+            print(emg)
+            emg = np.clip((np.array(emg)-200)/200., -1, 1)
+            noise[0:8] = emg  # np.clip((np.array(emg)-500)/500., -1, +1)
+            noise[8:16] = emg  # np.clip((np.array(emg)-500)/500., -1, +1)
+            for bar, ele in zip(bars, noise):
                 bar.set_height(ele)
             fig.canvas.draw()
 
@@ -260,7 +262,7 @@ if __name__ == '__main__':
             except KeyboardInterrupt:
                 pass
             finally:
-                print 'exiting myo...'
+                print('exiting myo...')
                 myo.disconnect()
         proc = Process(target=myo_process)
         proc.start()

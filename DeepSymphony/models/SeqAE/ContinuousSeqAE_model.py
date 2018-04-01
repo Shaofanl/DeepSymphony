@@ -320,7 +320,7 @@ class ContinuousSeqAE(object):
             saver = tf.train.Saver()
 
             if continued:
-                print 'restoring'
+                print('restoring')
                 saver.restore(sess, hparam.weight_path)
             else:
                 sess.run(tf.global_variables_initializer())

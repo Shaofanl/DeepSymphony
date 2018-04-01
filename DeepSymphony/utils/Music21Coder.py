@@ -35,10 +35,10 @@ class NoteDurationCoder(object):
             if nb_voice == 0:
                 continue
 
-            print 'number of voices', nb_voice
+            print('number of voices', nb_voice)
             if self.first_voice:
                 part = part.voices[0]
-            print 'key', part.analyze('key')
+            print('key', part.analyze('key'))
 
             part = part.flat
             if self.normalize_key:
@@ -47,7 +47,7 @@ class NoteDurationCoder(object):
                     pitches[0], ms.pitch.Pitch(self.normalize_key)
                 )
                 part = part.transpose(interval)
-                print 'transpose key to', part.analyze('key')
+                print('transpose key to', part.analyze('key'))
 
             for comp in part.notes:
                 start = int(comp.offset/self.resolution)
@@ -134,7 +134,7 @@ class MultiHotCoder(object):
                 pitches[0], ms.pitch.Pitch(self.normalize_key)
             )
             score = score.transpose(interval)
-            print 'transpose key to', score.analyze('key')
+            print('transpose key to', score.analyze('key'))
 
         if self.only_major and 'major' not in score.analyze('key').name:
             return None
@@ -193,8 +193,8 @@ class MultiHotCoder(object):
             if self.merge_voices:
                 voices = np.max(voices, 0)
                 velocities = np.max(velocities, 0)
-                print 'max', voices.max(), velocities.max()
-                print 'shape', voices.shape, velocities.shape
+                print('max', voices.max(), velocities.max())
+                print('shape', voices.shape, velocities.shape)
 
             voices = voices.astype('bool')
             velocities = velocities.astype('uint8')
@@ -213,8 +213,8 @@ class MultiHotCoder(object):
             codes = np.expand_dims(codes, 0)
             if velocity is not None:
                 velocity = np.expand_dims(velocity, 0)
-                print velocity.shape
-            print codes.shape
+                print(velocity.shape)
+            print(codes.shape)
 
         nb_voices = codes.shape[0]
         stream = ms.stream.Stream()
@@ -265,7 +265,7 @@ class MeasureSplitCoder(NoteDurationCoder):
                 cur_key[0], ms.pitch.Pitch(self.normalize_key)
             )
             score = score.transpose(interval)
-            print 'transpose key to', score.analyze('key')
+            print('transpose key to', score.analyze('key'))
 
         notes = []
         duras = []
@@ -341,5 +341,5 @@ if __name__ == '__main__':
     # coder = NoteDurationCoder()
     coder = MeasureSplitCoder()
     res = coder.encode(ms.converter.parse('/home/ly/projects/deepsymphony/datasets/easymusicnotes/level11/the-penny-theme-victor-m-barba-movies-piano-level-11.mid'))
-    print res
+    print(res)
 

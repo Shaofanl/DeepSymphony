@@ -115,6 +115,7 @@ if __name__ == '__main__':
         print 'old', duras
         print 'new', duration
         print duration[-1]
+        print 'sqr diff', ((duras-duration)**2).sum()
         coder.decode(notes, duration).write('midi', 'example.d.mid')
         # print zip(notes, duras)
 

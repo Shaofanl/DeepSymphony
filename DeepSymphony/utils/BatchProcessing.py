@@ -12,7 +12,10 @@ def map_dir(map_function, dirpath, cores=1, **kwargs):
     results = []
     if cores == 1:
         for filename in tqdm(filelist):
-            results.append(map_function(filename))
+            try:
+                results.append(map_function(filename))
+            except:
+                print('error')
     else:
         pool = Pool(cores)
         results = pool.map(map_function, filelist)

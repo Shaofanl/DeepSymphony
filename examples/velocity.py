@@ -51,6 +51,7 @@ if __name__ == '__main__':
         model.summary()
 
         coder = MultiHotCoder()
+        # notes = coder.encode(ms.converter.parse('masterpiece/0044.mid'), force=True)
         notes = coder.encode(ms.converter.parse('example.d.mid'), force=True)
         velocity = model.predict(np.array([notes]))[0]
         velocity = ((velocity+1)/2.*127.).astype('uint8')
@@ -60,9 +61,9 @@ if __name__ == '__main__':
 
         import matplotlib.pyplot as plt
         plt.subplot(211)
-        plt.imshow(notes.T[::-1, :])
+        plt.imshow(notes.T[::-1, :], cmap='Reds')
         plt.subplot(212)
-        plt.imshow(velocity.T[::-1, :])
+        plt.imshow(velocity.T[::-1, :], cmap='Reds')
         plt.show()
 
     print 'done'

@@ -181,7 +181,7 @@ class SeqGAN(object):
             saver = tf.train.Saver()
 
             if continued:
-                print 'restoring'
+                print('restoring')
                 saver.restore(sess, hparam.weight_path)
             else:
                 sess.run(tf.global_variables_initializer())
@@ -193,7 +193,7 @@ class SeqGAN(object):
 
             i = begin = self.iter_step.eval()
             while i < hparam.iterations+begin:
-                print i
+                print(i)
                 i += 1
                 sess.run(self.iter_step_op)
 

@@ -54,11 +54,12 @@ if __name__ == '__main__':
 
     try:
         data = np.load('temp/easy.npz')['data']
+        # data = np.load('temp/1138.npz')['data']
     except:
         data = np.array(map_dir(
             lambda fn: coder.encode(ms.converter.parse(fn))[0],
-            './datasets/easymusicnotes/'))
-        np.savez('temp/easy.npz', data=data)
+            './datasets/1138ChinesePopSongs/1138/'))
+        np.savez('temp/1138.npz', data=data)
 
     print(len(data), map(lambda x: len(x), data))
     data = filter(lambda x: len(x) > hparam.timesteps, data)
@@ -117,25 +118,25 @@ if __name__ == '__main__':
         np.savez(hparam.workdir+'code_collection.npz',
                  wrapper={'code': collection, 'seqs': seqs})
     if mode == 'eval':
-        print 'trainset'
+        print('trainset')
         seqs = fetch_train_data(hparam.batch_size)
         pred, train_pred = model.eval(seqs)
         np.set_printoptions(linewidth=np.inf)
         for i in range(5):
-            print '='*200
-            print seqs[i]
-            print train_pred[i]
-            print pred[i][:2*hparam.timesteps]
+            print('='*200)
+            print(seqs[i])
+            print(train_pred[i])
+            print(pred[i][:2*hparam.timesteps])
 
-        print 'testset'
+        print('testset')
         seqs = fetch_test_data(hparam.batch_size)
         pred, train_pred = model.eval(seqs)
         np.set_printoptions(linewidth=np.inf)
         for i in range(5):
-            print '='*200
-            print seqs[i]
-            print train_pred[i]
-            print pred[i][:2*hparam.timesteps]
+            print('='*200)
+            print(seqs[i])
+            print(train_pred[i])
+            print(pred[i][:2*hparam.timesteps])
     if mode == 'continuous_eval':
         np.set_printoptions(precision=3)
         seq = train_data[1].copy()
@@ -143,16 +144,16 @@ if __name__ == '__main__':
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
         code = model.encode(batch[:hparam.batch_size], quantized=True)
-        print (code[:-1] != code[1:]).sum(1)
-        print code[0]
-        print code[1]
-        print (code[0][None, :] != code).sum(1)
-        print (code[1][None, :] != code).sum(1)
-        print (code[2][None, :] != code).sum(1)
-        print (code[3][None, :] != code).sum(1)
-        print code.min()
-        print code.max()
-        print code.mean()
+        print((code[:-1] != code[1:]).sum(1))
+        print(code[0])
+        print(code[1])
+        print((code[0][None, :] != code).sum(1))
+        print((code[1][None, :] != code).sum(1))
+        print((code[2][None, :] != code).sum(1))
+        print((code[3][None, :] != code).sum(1))
+        print(code.min())
+        print(code.max())
+        print(code.mean())
 
         # for c in code:
             # print np.histogram(c)
@@ -163,11 +164,11 @@ if __name__ == '__main__':
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
         ori = code = model.encode(batch, quantized=True)
-        print code
+        print(code)
         rec = model.generate(code, quantized=True).flatten()
-        print seq.shape
-        print batch.shape
-        print rec.shape
+        print(seq.shape)
+        print(batch.shape)
+        print(rec.shape)
 
         coder.decode(seq, 2).write('midi', 'truth.mid')
         coder.decode(rec, 2).write('midi', 'rec.mid')
@@ -178,12 +179,12 @@ if __name__ == '__main__':
                                   hparam.timesteps,
                                   stride=hparam.timesteps)
         code = model.encode(batch, quantized=True)  # first layer
-        print code
+        print(code)
 
         from sklearn.manifold import TSNE
         tsne = TSNE(2)
         code = tsne.fit_transform(code)
-        print code.shape
+        print(code.shape)
         import matplotlib.pyplot as plt
         plt.plot(code[:, 0], code[:, 1],
                  marker='o', ms=8)
@@ -201,7 +202,7 @@ if __name__ == '__main__':
         # code = model.encode([[60, 128, 60, 128, 64, 128, 64, 128]],
         #                     quantized=True)
 
-        rng = np.random.RandomState(32)
+        rng = np.random.RandomState(30)
         pos = code[0]
         _theme = code[0].copy()
         # _theme2 = code[18].copy()
@@ -233,7 +234,7 @@ if __name__ == '__main__':
                 if np.random.rand() < 0.80:
                     pos = theme.copy()
                 if np.random.rand() < 0.20:
-                    print 'switch theme'
+                    print('switch theme')
                     theme = pos.copy()
 
             # if np.random.rand() < 0.50:
@@ -260,7 +261,7 @@ if __name__ == '__main__':
         code = model.encode(batch, quantized=True)[0]
         shift = np.random.choice(len(code[0]))
         code[:, shift] = -1
-        print code
+        print(code)
         rec = model.generate(code, quantized=True).flatten()
 
         coder.decode(seq, 2).write('midi', 'truth.mid')

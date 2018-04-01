@@ -199,7 +199,7 @@ class SeqAE(object):
             saver = tf.train.Saver()
 
             if continued:
-                print 'restoring'
+                print('restoring')
                 saver.restore(sess, hparam.weight_path)
             else:
                 sess.run(tf.global_variables_initializer())
@@ -213,9 +213,9 @@ class SeqAE(object):
                               self.embeddings,
                               self.loss],
                              feed_dict={self.seqs: seqs})
-                print code
-                print pad_seqs_emb
-                print embeddings
+                print(code)
+                print(pad_seqs_emb)
+                print(embeddings)
                 import ipdb
                 ipdb.set_trace()
 

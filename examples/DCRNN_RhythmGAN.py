@@ -30,6 +30,7 @@ if __name__ == '__main__':
         cells=[64, 32],  # [64, 32, 32],
         repeats=[1, 1],  # [8, 2, 1],
         last_bidirectional=False,
+        bidirection=[False, False],
         timesteps=_timesteps,
         code_dim=50,
         vocab_size=128,
